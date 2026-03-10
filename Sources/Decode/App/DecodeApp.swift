@@ -26,6 +26,34 @@ struct DecodeApp: App {
                 }
                 .keyboardShortcut("n")
             }
+            CommandMenu("Git") {
+                Button("Commit...") {
+                    NotificationCenter.default.post(name: .gitCommitShortcut, object: nil)
+                }
+                .keyboardShortcut("k")
+
+                Button("Push") {
+                    NotificationCenter.default.post(name: .gitPushShortcut, object: nil)
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
+
+                Button("Create PR") {
+                    NotificationCenter.default.post(name: .gitPRShortcut, object: nil)
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+            }
+            CommandGroup(after: .appSettings) {
+                Button("Settings...") {
+                    appState.showSettings = true
+                }
+                .keyboardShortcut(",")
+            }
         }
     }
+}
+
+extension Notification.Name {
+    static let gitCommitShortcut = Notification.Name("gitCommitShortcut")
+    static let gitPushShortcut = Notification.Name("gitPushShortcut")
+    static let gitPRShortcut = Notification.Name("gitPRShortcut")
 }

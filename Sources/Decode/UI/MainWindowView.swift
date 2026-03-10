@@ -7,6 +7,16 @@ struct MainWindowView: View {
     @StateObject private var session = SessionController()
 
     var body: some View {
+        Group {
+            if !appState.hasCompletedOnboarding {
+                OnboardingView()
+            } else {
+                mainContent
+            }
+        }
+    }
+
+    private var mainContent: some View {
         HSplitView {
             // Left: Terminal (the firehose)
             TerminalContainerView(ptyTap: session.ptyTap)
@@ -14,7 +24,7 @@ struct MainWindowView: View {
 
             // Right: Narration sidebar (the navigator)
             NarrationSidebarView(session: session)
-                .frame(minWidth: 280, idealWidth: 340, maxWidth: 400)
+                .frame(minWidth: 280, idealWidth: appState.sidebarWidth, maxWidth: 400)
         }
         .sheet(isPresented: $appState.showSettings) {
             SettingsView()

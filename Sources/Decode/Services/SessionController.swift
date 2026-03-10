@@ -19,6 +19,8 @@ final class SessionController: ObservableObject {
     private let narrationContext = NarrationContext()
     private let narrationEngine = NarrationEngine()
 
+    private let maxSidebarItems = 100
+
     private var cancellables = Set<AnyCancellable>()
     private var narrationTimer: Timer?
     private var detectionChunks: [TerminalChunk] = []
@@ -126,11 +128,34 @@ final class SessionController: ObservableObject {
         if let entry = await narrationEngine.narrate(context: narrationContext) {
             narrationEntries.append(entry)
             sidebarItems.append(.narration(entry))
+            trimIfNeeded()
+            autoSave()
             narrationContext.addNarration(entry)
             currentStatus = entry.status
             narrationContext.currentStatus = entry.status
         }
         isNarrating = false
+    }
+
+    private func autoSave() {
+        let commits = sidebarItems.compactMap { item -> GitCommitInfo? in
+            if case .commit(let c) = item { return c }
+            return nil
+        }
+        SessionPersistence.save(
+            entries: narrationEntries,
+            commits: commits,
+            sessionStart: narrationContext.sessionStart
+        )
+    }
+
+    private func trimIfNeeded() {
+        if sidebarItems.count > maxSidebarItems {
+            sidebarItems.removeFirst(sidebarItems.count - maxSidebarItems)
+        }
+        if narrationEntries.count > maxSidebarItems {
+            narrationEntries.removeFirst(narrationEntries.count - maxSidebarItems)
+        }
     }
 
     deinit {

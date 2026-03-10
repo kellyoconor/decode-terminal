@@ -44,13 +44,26 @@ final class GitMonitor: ObservableObject {
 
         let workDir = repoRoot.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Branch name
-        let branch = runGit(["rev-parse", "--abbrev-ref", "HEAD"], in: workDir)?
+        // Branch name (returns "HEAD" when detached)
+        var branch = runGit(["rev-parse", "--abbrev-ref", "HEAD"], in: workDir)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-        // HEAD hash
+        // Handle detached HEAD — show short hash instead
+        if branch == "HEAD" {
+            let shortHash = runGit(["rev-parse", "--short", "HEAD"], in: workDir)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            branch = shortHash.isEmpty ? "detached" : "(\(shortHash))"
+        }
+
+        // HEAD hash — may not exist in empty repos
         let headHash = runGit(["rev-parse", "--short", "HEAD"], in: workDir)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        // No commits yet — show repo as detected but with no stats
+        guard !headHash.isEmpty else {
+            gitState = GitState(branch: branch, headHash: "", linesAdded: 0, linesRemoved: 0, filesChanged: 0, isGitRepo: true)
+            return
+        }
 
         // Diff stats (unstaged + staged vs HEAD)
         let diffStat = runGit(["diff", "--shortstat", "HEAD"], in: workDir)?
@@ -74,12 +87,13 @@ final class GitMonitor: ObservableObject {
     }
 
     private func detectNewCommit(in workDir: String, newHash: String) {
-        // Get the commit message
         let message = runGit(["log", "-1", "--format=%s"], in: workDir)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? "Commit"
 
-        // Get diff stats for this commit
+        // Get diff stats — HEAD~1 may not exist for first commit
         let stat = runGit(["diff", "--shortstat", "HEAD~1", "HEAD"], in: workDir)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            ?? runGit(["diff", "--shortstat", "--cached", "HEAD"], in: workDir)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let (files, added, removed) = parseShortStat(stat)
 

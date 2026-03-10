@@ -12,6 +12,8 @@ final class NarrationEngine: ObservableObject {
     private var lastStatus: SessionStatus = .idle
     private let minimumInterval: TimeInterval = 8.0
     private let chunkThreshold = 5
+    private var consecutiveFailures = 0
+    private let maxRetries = 2
 
     private let systemPrompt = """
     You narrate what an AI coding agent is doing in a terminal. You're like a calm GPS — short, clear, never overwhelming.
@@ -73,7 +75,7 @@ final class NarrationEngine: ObservableObject {
         return false
     }
 
-    /// Fire a narration request and stream the response.
+    /// Fire a narration request with retry logic.
     func narrate(context: NarrationContext) async -> NarrationEntry? {
         guard let apiClient else { return nil }
 
@@ -83,26 +85,49 @@ final class NarrationEngine: ObservableObject {
         let userMessage = context.serialize()
         var fullText = ""
         var status: SessionStatus = context.currentStatus
+        var lastError: Error?
 
-        do {
-            for try await token in apiClient.stream(systemPrompt: systemPrompt, userMessage: userMessage) {
-                fullText += token
+        for attempt in 0...maxRetries {
+            if attempt > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(attempt) * 1_000_000_000)
             }
 
-            // Parse STATUS: line
-            let lines = fullText.components(separatedBy: .newlines)
-            if let statusLine = lines.first, statusLine.uppercased().hasPrefix("STATUS:") {
-                let rawStatus = statusLine
-                    .replacingOccurrences(of: "STATUS:", with: "")
-                    .trimmingCharacters(in: .whitespaces)
-                    .lowercased()
-                if let parsed = SessionStatus(rawValue: rawStatus) {
-                    status = parsed
+            fullText = ""
+            lastError = nil
+
+            do {
+                for try await token in apiClient.stream(systemPrompt: systemPrompt, userMessage: userMessage) {
+                    fullText += token
                 }
-                fullText = lines.dropFirst().joined(separator: " ").trimmingCharacters(in: .whitespaces)
+
+                // Parse STATUS: line
+                let lines = fullText.components(separatedBy: .newlines)
+                if let statusLine = lines.first, statusLine.uppercased().hasPrefix("STATUS:") {
+                    let rawStatus = statusLine
+                        .replacingOccurrences(of: "STATUS:", with: "")
+                        .trimmingCharacters(in: .whitespaces)
+                        .lowercased()
+                    if let parsed = SessionStatus(rawValue: rawStatus) {
+                        status = parsed
+                    }
+                    fullText = lines.dropFirst().joined(separator: " ").trimmingCharacters(in: .whitespaces)
+                }
+
+                consecutiveFailures = 0
+                break // Success
+            } catch {
+                lastError = error
+                continue
             }
-        } catch {
-            fullText = "Narration unavailable: \(error.localizedDescription)"
+        }
+
+        if let error = lastError, fullText.isEmpty {
+            consecutiveFailures += 1
+            if consecutiveFailures <= 3 {
+                fullText = "Narration temporarily unavailable."
+            } else {
+                fullText = "Narration offline: \(error.localizedDescription)"
+            }
             status = .idle
         }
 
