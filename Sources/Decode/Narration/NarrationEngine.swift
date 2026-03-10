@@ -29,7 +29,10 @@ final class NarrationEngine: ObservableObject {
     - Skip spinner/loading noise entirely.
     - If waiting for permission: say what it wants to do, briefly.
     - Tone: calm, confident, like a good co-pilot.
-    - "Twisting…", "Embellishing…", "Harmonizing…", "Composing…" etc. are NORMAL thinking animations. The agent is working. Status should be on_route, NOT stuck. Only use "stuck" if the agent has been producing zero meaningful output for 2+ minutes or is clearly in an error loop.
+    - "Twisting…", "Embellishing…", "Harmonizing…", "Composing…" etc. are NORMAL thinking animations. The agent is working. Status should be on_route, NOT stuck.
+    - Agent startup/initialization (version info, prompts, settings) = idle or on_route, NOT stuck.
+    - Only use "stuck" if the agent has clearly errored or been in a genuine error loop for 2+ minutes. A quiet terminal or idle prompt is NOT stuck — it's idle.
+    - When the agent just started and is showing its initial prompt, use "idle" status.
 
     GOOD examples:
     "Reading package.json to check dependencies."

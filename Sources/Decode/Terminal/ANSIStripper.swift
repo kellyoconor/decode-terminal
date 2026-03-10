@@ -31,6 +31,18 @@ enum ANSIStripper {
         "preparing", "assembling", "building", "generating", "structuring",
     ]
 
+    /// Claude Code startup/UI chrome — not meaningful for narration.
+    private static let startupNoisePatterns: [String] = [
+        "for shortcuts",
+        "medium",
+        "/effort",
+        "esc to interrupt",
+        "Now using extra usage",
+        "shift+tab",
+        "Tip:",
+        "Press",
+    ]
+
     /// Returns true if the chunk is mostly spinner/loading animation noise.
     static func isSpinnerNoise(_ text: String) -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -41,6 +53,14 @@ enum ANSIStripper {
         let firstWord = trimmed.components(separatedBy: .whitespaces).first?
             .trimmingCharacters(in: CharacterSet.alphanumerics.inverted).lowercased() ?? ""
         if thinkingWords.contains(firstWord) { return true }
+
+        // Claude Code startup/UI chrome noise
+        let lower = trimmed.lowercased()
+        for pattern in startupNoisePatterns {
+            if lower.contains(pattern.lowercased()) { return true }
+        }
+        // Single "?" or ">" prompts
+        if trimmed == "?" || trimmed == ">" { return true }
 
         // Mostly braille/spinner unicode characters
         let spinnerChars = CharacterSet(charactersIn: "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏⣾⣽⣻⢿⡿⣟⣯⣷◐◓◑◒◴◷◶◵⠁⠂⠄⡀⢀⠠⠐⠈")

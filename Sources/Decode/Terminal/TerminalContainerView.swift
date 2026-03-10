@@ -15,6 +15,7 @@ struct TerminalContainerView: NSViewRepresentable {
         let container = TerminalHostView()
         let terminalView = TappedTerminalView(frame: .zero)
         terminalView.ptyTap = ptyTap
+        ptyTap.terminalView = terminalView
         context.coordinator.terminalView = terminalView
 
         // Terminal appearance — dark, matching the left pane design
@@ -46,6 +47,22 @@ struct TerminalContainerView: NSViewRepresentable {
             execName: nil,
             currentDirectory: home
         )
+
+        // Expose shell PID for git monitoring — retry until available
+        let tap = ptyTap
+        func checkPid(attempt: Int) {
+            let pid = terminalView.process?.shellPid ?? 0
+            if pid > 0 {
+                tap.shellPid = pid
+            } else if attempt < 10 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    checkPid(attempt: attempt + 1)
+                }
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            checkPid(attempt: 0)
+        }
 
         return container
     }

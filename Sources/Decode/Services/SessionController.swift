@@ -5,11 +5,14 @@ import Combine
 @MainActor
 final class SessionController: ObservableObject {
     @Published var narrationEntries: [NarrationEntry] = []
+    @Published var sidebarItems: [SidebarItem] = []
     @Published var currentStatus: SessionStatus = .idle
     @Published var isNarrating: Bool = false
     @Published var detectedAgent: AgentType = .unknown
+    @Published var gitState = GitState()
 
     let ptyTap = PTYTap()
+    let gitMonitor = GitMonitor()
 
     private let chunkAssembler: ChunkAssembler
     private let grammar = ClaudeCodeGrammar()
@@ -30,6 +33,30 @@ final class SessionController: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] chunk in
                 self?.handleChunk(chunk)
+            }
+            .store(in: &cancellables)
+
+        // Start git monitoring when shell PID becomes available
+        ptyTap.$shellPid
+            .compactMap { $0 }
+            .first()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] pid in
+                self?.gitMonitor.start(shellPid: pid)
+            }
+            .store(in: &cancellables)
+
+        // Forward git state
+        gitMonitor.$gitState
+            .receive(on: RunLoop.main)
+            .assign(to: &$gitState)
+
+        // Insert commit cards into the sidebar feed
+        gitMonitor.$latestCommit
+            .compactMap { $0 }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] commit in
+                self?.sidebarItems.append(.commit(commit))
             }
             .store(in: &cancellables)
     }
@@ -98,6 +125,7 @@ final class SessionController: ObservableObject {
         isNarrating = true
         if let entry = await narrationEngine.narrate(context: narrationContext) {
             narrationEntries.append(entry)
+            sidebarItems.append(.narration(entry))
             narrationContext.addNarration(entry)
             currentStatus = entry.status
             narrationContext.currentStatus = entry.status

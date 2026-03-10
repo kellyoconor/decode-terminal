@@ -43,6 +43,16 @@ struct NarrationSidebarView: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 16)
 
+            // Git branch + diff stats + quick actions
+            if session.gitState.isGitRepo {
+                VStack(alignment: .leading, spacing: 10) {
+                    GitBranchView(gitState: session.gitState)
+                    GitActionsView(ptyTap: session.ptyTap, gitState: session.gitState)
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 12)
+            }
+
             Divider()
                 .background(borderColor)
 
@@ -69,14 +79,19 @@ struct NarrationSidebarView: View {
                 .padding(.top, 16)
             }
 
-            // Narration feed — newest on top
+            // Sidebar feed — newest on top, narration + commit cards interleaved
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
-                    if session.narrationEntries.isEmpty {
+                    if session.sidebarItems.isEmpty {
                         emptyState
                     } else {
-                        ForEach(session.narrationEntries.reversed()) { entry in
-                            NarrationEntryView(entry: entry)
+                        ForEach(session.sidebarItems.reversed()) { item in
+                            switch item {
+                            case .narration(let entry):
+                                NarrationEntryView(entry: entry)
+                            case .commit(let commitInfo):
+                                GitCommitCardView(commit: commitInfo)
+                            }
                         }
                     }
                 }
