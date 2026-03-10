@@ -10,6 +10,9 @@ struct DecodeApp: App {
         // This makes us a proper foreground app that can receive keyboard focus.
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
+
+        // Register bundled JetBrains Mono so it works without system install
+        FontLoader.registerBundledFonts()
     }
 
     var body: some Scene {

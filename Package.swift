@@ -17,7 +17,10 @@ let package = Package(
         .executableTarget(
             name: "Decode",
             dependencies: ["SwiftTerm"],
-            path: "Sources/Decode"
+            path: "Sources/Decode",
+            resources: [
+                .copy("Resources/Fonts")
+            ]
         ),
         .testTarget(
             name: "DecodeTests",
