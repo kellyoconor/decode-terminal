@@ -69,29 +69,19 @@ struct NarrationSidebarView: View {
                 .padding(.top, 16)
             }
 
-            // Narration feed
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16) {
-                        if session.narrationEntries.isEmpty {
-                            emptyState
-                        } else {
-                            ForEach(session.narrationEntries) { entry in
-                                NarrationEntryView(entry: entry)
-                                    .id(entry.id)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
-                }
-                .onChange(of: session.narrationEntries.count) { _, _ in
-                    if let last = session.narrationEntries.last {
-                        withAnimation(.easeOut(duration: 0.3)) {
-                            proxy.scrollTo(last.id, anchor: .bottom)
+            // Narration feed — newest on top
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    if session.narrationEntries.isEmpty {
+                        emptyState
+                    } else {
+                        ForEach(session.narrationEntries.reversed()) { entry in
+                            NarrationEntryView(entry: entry)
                         }
                     }
                 }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 16)
             }
 
             Spacer(minLength: 0)

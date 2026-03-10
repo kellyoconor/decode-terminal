@@ -1,8 +1,16 @@
 import SwiftUI
+import AppKit
 
 @main
 struct DecodeApp: App {
     @StateObject private var appState = AppState()
+
+    init() {
+        // When launched from the command line, macOS treats us as a background process.
+        // This makes us a proper foreground app that can receive keyboard focus.
+        NSApplication.shared.setActivationPolicy(.regular)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
 
     var body: some Scene {
         WindowGroup {

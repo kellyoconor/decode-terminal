@@ -28,9 +28,9 @@ struct ClaudeCodeGrammar: AgentGrammarProtocol {
         options: [.anchorsMatchLines]
     )
 
-    /// Permission prompts
+    /// Permission prompts — only match explicit permission UI, not generic text
     private static let permissionPattern = try! NSRegularExpression(
-        pattern: "(?i)(allow|deny|approve|reject|permission|do you want to proceed|y/n)",
+        pattern: "(?i)(Do you want to (?:create|edit|delete|write|run|execute|overwrite)|allow.*edits.*this session|Esc to cancel)",
         options: []
     )
 
@@ -53,9 +53,10 @@ struct ClaudeCodeGrammar: AgentGrammarProtocol {
     )
 
     /// User input prompt (Claude Code waiting for input)
+    /// NOTE: Do NOT match `^\s*>\s*$` — that's the normal Claude Code prompt, not a request for input.
     private static let userInputPattern = try! NSRegularExpression(
-        pattern: "^\\s*>\\s*$|waiting for.*input|Type a message",
-        options: [.anchorsMatchLines]
+        pattern: "Interrupted|What should Claude do|Do you want to (?:create|edit|delete|write|run|execute|overwrite)|(?:Yes|No)\\s*/\\s*(?:Yes|No)|allow.*edits.*this session",
+        options: [.anchorsMatchLines, .caseInsensitive]
     )
 
     // MARK: - AgentGrammarProtocol

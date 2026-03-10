@@ -7,11 +7,10 @@ struct NarrationEntry: Identifiable {
     let text: String
     let status: SessionStatus
 
-    var relativeTime: String {
-        let seconds = Int(-timestamp.timeIntervalSinceNow)
-        if seconds < 5 { return "Just now" }
-        if seconds < 60 { return "\(seconds)s ago" }
-        if seconds < 3600 { return "\(seconds / 60)m ago" }
-        return "\(seconds / 3600)h ago"
+    /// Formatted timestamp showing actual time, not relative
+    var timeLabel: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: timestamp)
     }
 }

@@ -52,6 +52,7 @@ final class ChunkAssembler {
         let stripped = ANSIStripper.strip(text)
         let trimmed = stripped.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        guard !ANSIStripper.isSpinnerNoise(trimmed) else { return }
 
         let chunk = TerminalChunk(
             text: trimmed,

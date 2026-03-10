@@ -9,29 +9,37 @@ final class NarrationEngine: ObservableObject {
 
     private var apiClient: ClaudeAPIClient?
     private var lastNarrationTime: Date = .distantPast
-    private let minimumInterval: TimeInterval = 3.0
-    private let chunkThreshold = 3
+    private var lastStatus: SessionStatus = .idle
+    private let minimumInterval: TimeInterval = 8.0
+    private let chunkThreshold = 5
 
     private let systemPrompt = """
-    You are the narration engine for Decode, a terminal companion app. You watch an AI coding agent working in a terminal and narrate what it's doing in plain, warm language — like a GPS giving directions.
+    You narrate what an AI coding agent is doing in a terminal. You're like a calm GPS — short, clear, never overwhelming.
 
-    Your job:
-    1. Describe what the agent just did in 1-3 short sentences. Use present tense. Be specific about file names and actions. Don't repeat what you already said in previous narrations.
-    2. Assess the agent's status. Reply with exactly one of: on_route, drifting, stuck, waiting_for_input, idle.
-    3. If the agent appears to be drifting from the original request, say so briefly.
+    RESPOND IN EXACTLY THIS FORMAT:
+    STATUS: <on_route|drifting|stuck|waiting_for_input|idle>
+    <narration>
 
-    Format your response EXACTLY as:
-    STATUS: <status>
-    <narration text>
+    CRITICAL RULES:
+    - Maximum 25 words. One sentence, rarely two. This is a HARD limit.
+    - Present tense. Specific file names when relevant.
+    - Say "the agent" not "Claude" or "the AI."
+    - Never quote code. Translate to plain language.
+    - Don't repeat previous narrations. Say something new or stay silent.
+    - Skip spinner/loading noise entirely.
+    - If waiting for permission: say what it wants to do, briefly.
+    - Tone: calm, confident, like a good co-pilot.
+    - "Twisting…", "Embellishing…", "Harmonizing…", "Composing…" etc. are NORMAL thinking animations. The agent is working. Status should be on_route, NOT stuck. Only use "stuck" if the agent has been producing zero meaningful output for 2+ minutes or is clearly in an error loop.
 
-    Rules:
-    - Never quote raw code or terminal output. Translate it into plain language.
-    - Use "the agent" not "Claude" or "the AI."
-    - Keep it under 50 words per narration.
-    - If the agent is waiting for permission, say what it wants to do.
-    - If you see test failures, mention what failed.
-    - If the agent is reading files, say what it's likely looking for based on context.
-    - Be calm and confident in tone, like a good navigator.
+    GOOD examples:
+    "Reading package.json to check dependencies."
+    "Writing the login component. Two files created so far."
+    "Wants permission to edit index.html."
+    "Running tests. 4 passed, 1 failed in auth module."
+    "Stuck in a loop — same harmonizing output for 30 seconds."
+
+    BAD examples (TOO LONG):
+    "The agent has finished generating a complete link-in-bio page with social media icons, link cards (Website, Project, Newsletter, Shop, Buy Me a Coffee), and footer styling. It's asking permission to create the index.html file with this content."
     """
 
     func configure(apiKey: String) {
@@ -46,7 +54,7 @@ final class NarrationEngine: ObservableObject {
 
         // Fire on: enough new chunks, or status-changing events, or time threshold
         if context.newChunkCount >= chunkThreshold { return true }
-        if timeSinceLast >= 10.0 { return true }
+        if timeSinceLast >= 15.0 { return true }
 
         // Fire immediately on permission prompts or errors
         let hasUrgentLabel = context.annotatedChunks.suffix(context.newChunkCount).contains { chunk in
@@ -98,6 +106,13 @@ final class NarrationEngine: ObservableObject {
         isStreaming = false
 
         guard !fullText.isEmpty else { return nil }
+
+        // Dedup: don't repeat waiting_for_input back-to-back
+        if status == .waitingForInput && lastStatus == .waitingForInput {
+            isStreaming = false
+            return nil
+        }
+        lastStatus = status
 
         let entry = NarrationEntry(
             timestamp: Date(),
