@@ -48,7 +48,7 @@ struct SettingsView: View {
             if let validationError {
                 Text(validationError)
                     .font(.system(size: 12))
-                    .foregroundColor(.red)
+                    .foregroundColor(theme.errorRed)
             }
 
             Text("Your key is stored in macOS Keychain.")

@@ -151,7 +151,7 @@ struct OnboardingView: View {
             if let validationError {
                 Text(validationError)
                     .font(.system(size: 12))
-                    .foregroundColor(.red)
+                    .foregroundColor(theme.errorRed)
             }
         }
     }
