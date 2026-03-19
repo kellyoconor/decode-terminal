@@ -3,6 +3,9 @@ import SwiftUI
 struct StatusPillView: View {
     let status: SessionStatus
 
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { Theme(colorScheme: colorScheme) }
+
     var body: some View {
         HStack(spacing: 6) {
             Circle()
@@ -21,11 +24,11 @@ struct StatusPillView: View {
 
     private var statusColor: Color {
         switch status {
-        case .onRoute: return Color(red: 0.086, green: 0.639, blue: 0.290) // #16A34A
-        case .drifting: return Color(red: 0.961, green: 0.620, blue: 0.043) // #F59E0B
-        case .stuck: return Color(red: 0.937, green: 0.267, blue: 0.267) // #EF4444
-        case .waitingForInput: return Color(red: 0.231, green: 0.510, blue: 0.965) // #3B82F6
-        case .idle: return Color(red: 0.549, green: 0.549, blue: 0.522) // #8C8C85
+        case .onRoute: return theme.onRouteColor
+        case .drifting: return theme.driftingAmber
+        case .stuck: return theme.stuckRed
+        case .waitingForInput: return theme.waitingBlue
+        case .idle: return theme.idleGray
         }
     }
 }

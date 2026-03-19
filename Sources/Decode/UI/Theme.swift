@@ -61,9 +61,14 @@ struct Theme {
 
     // Status colors (same in both modes — these are semantic)
     let onRouteColor = Color(red: 0.086, green: 0.639, blue: 0.290)
+    let driftingAmber = Color(red: 0.961, green: 0.620, blue: 0.043)
+    let stuckRed = Color(red: 0.937, green: 0.267, blue: 0.267)
+    let waitingBlue = Color(red: 0.231, green: 0.510, blue: 0.965)
+    let idleGray = Color(red: 0.549, green: 0.549, blue: 0.522)
     let addedGreen = Color(red: 0.204, green: 0.718, blue: 0.357)
     let removedRed = Color(red: 0.910, green: 0.329, blue: 0.329)
     let commitColor = Color(red: 0.933, green: 0.510, blue: 0.118)
-    let waitingBlue = Color(red: 0.231, green: 0.510, blue: 0.965)
     let watchingGreen = Color(red: 0.204, green: 0.827, blue: 0.600)
+    let errorRed = Color(red: 0.850, green: 0.250, blue: 0.235)
+    let linkBlue = Color(red: 0.231, green: 0.510, blue: 0.965)
 }
