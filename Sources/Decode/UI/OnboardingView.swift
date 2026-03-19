@@ -46,7 +46,7 @@ struct OnboardingView: View {
             VStack(spacing: 12) {
                 Text("Google Maps for your terminal.")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.primary)
+                    .foregroundColor(theme.primaryText)
 
                 Text("A native macOS terminal with an AI sidebar that narrates what your coding agent is doing — in plain language, in real time.")
                     .font(.system(size: 13))
