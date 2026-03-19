@@ -25,6 +25,8 @@ final class SessionController: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
     private var narrationTimer: Timer?
+    private var sleepObserver: NSObjectProtocol?
+    private var wakeObserver: NSObjectProtocol?
     private var detectionChunks: [TerminalChunk] = []
     private var isDetectionLocked = false
 
@@ -79,13 +81,17 @@ final class SessionController: ObservableObject {
         // Start the narration check timer
         resumeNarrationTimer()
 
+        // Remove previous observers if configure() called again (e.g. user changes API key)
+        if let obs = sleepObserver { NSWorkspace.shared.notificationCenter.removeObserver(obs) }
+        if let obs = wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(obs) }
+
         // Pause narration timer on system sleep, resume on wake
-        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+        sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.pauseNarrationTimer()
             }
         }
-        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.resumeNarrationTimer()
             }
