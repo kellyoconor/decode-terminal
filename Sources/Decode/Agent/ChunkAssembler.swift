@@ -15,6 +15,7 @@ final class ChunkAssembler {
 
     init(ptyTap: PTYTap) {
         ptyTap.dataSubject
+            .receive(on: RunLoop.main)
             .sink { [weak self] data in
                 self?.append(data)
             }
