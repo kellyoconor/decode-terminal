@@ -11,6 +11,7 @@ final class NarrationEngine: ObservableObject {
     private var apiClient: ClaudeAPIClient?
     private var lastNarrationTime: Date = .distantPast
     private var lastStatus: SessionStatus = .idle
+    private var lastNarrationText: String = ""
     private let minimumInterval: TimeInterval = 8.0
     private let chunkThreshold = 5
     private var consecutiveFailures = 0
@@ -71,7 +72,13 @@ final class NarrationEngine: ObservableObject {
                 }
             }
         }
-        if hasUrgentLabel { return true }
+        if hasUrgentLabel {
+            // Skip if the last narration was also waitingForInput and no new non-permission chunks arrived
+            if lastStatus == .waitingForInput && context.currentStatus == .waitingForInput && context.newChunkCount <= 1 {
+                return false
+            }
+            return true
+        }
 
         return false
     }
@@ -141,12 +148,12 @@ final class NarrationEngine: ObservableObject {
 
         guard !fullText.isEmpty else { return nil }
 
-        // Dedup: don't repeat waiting_for_input back-to-back
-        if status == .waitingForInput && lastStatus == .waitingForInput {
-            isStreaming = false
+        // Dedup: skip if identical status AND text to last narration
+        if status == lastStatus && fullText == lastNarrationText {
             return nil
         }
         lastStatus = status
+        lastNarrationText = fullText
 
         let entry = NarrationEntry(
             timestamp: Date(),
