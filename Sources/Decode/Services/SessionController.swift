@@ -149,12 +149,12 @@ final class SessionController: ObservableObject {
                 currentStatus = .waitingForInput
                 narrationContext.currentStatus = .waitingForInput
             case .error:
-                currentStatus = .stuck
-                narrationContext.currentStatus = .stuck
+                currentStatus = .blocked
+                narrationContext.currentStatus = .blocked
             default:
-                if currentStatus != .onRoute {
-                    currentStatus = .onRoute
-                    narrationContext.currentStatus = .onRoute
+                if currentStatus != .thinking {
+                    currentStatus = .thinking
+                    narrationContext.currentStatus = .thinking
                 }
             }
         }

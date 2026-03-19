@@ -6,23 +6,23 @@ final class ModelTests: XCTestCase {
     // MARK: - SessionStatus
 
     func testSessionStatusRawValues() {
-        XCTAssertEqual(SessionStatus.onRoute.rawValue, "on_route")
-        XCTAssertEqual(SessionStatus.drifting.rawValue, "drifting")
-        XCTAssertEqual(SessionStatus.stuck.rawValue, "stuck")
+        XCTAssertEqual(SessionStatus.thinking.rawValue, "thinking")
+        XCTAssertEqual(SessionStatus.exploring.rawValue, "exploring")
+        XCTAssertEqual(SessionStatus.blocked.rawValue, "blocked")
         XCTAssertEqual(SessionStatus.waitingForInput.rawValue, "waiting_for_input")
         XCTAssertEqual(SessionStatus.idle.rawValue, "idle")
     }
 
     func testSessionStatusDisplayLabels() {
-        XCTAssertEqual(SessionStatus.onRoute.displayLabel, "On Route")
-        XCTAssertEqual(SessionStatus.drifting.displayLabel, "Drifting")
-        XCTAssertEqual(SessionStatus.stuck.displayLabel, "Stuck")
+        XCTAssertEqual(SessionStatus.thinking.displayLabel, "Thinking")
+        XCTAssertEqual(SessionStatus.exploring.displayLabel, "Exploring")
+        XCTAssertEqual(SessionStatus.blocked.displayLabel, "Blocked")
         XCTAssertEqual(SessionStatus.waitingForInput.displayLabel, "Waiting")
         XCTAssertEqual(SessionStatus.idle.displayLabel, "Idle")
     }
 
     func testSessionStatusCodableRoundTrip() throws {
-        for status in [SessionStatus.onRoute, .drifting, .stuck, .waitingForInput, .idle] {
+        for status in [SessionStatus.thinking, .exploring, .blocked, .waitingForInput, .idle] {
             let data = try JSONEncoder().encode(status)
             let decoded = try JSONDecoder().decode(SessionStatus.self, from: data)
             XCTAssertEqual(decoded, status)
@@ -30,7 +30,7 @@ final class ModelTests: XCTestCase {
     }
 
     func testSessionStatusInitFromRawValue() {
-        XCTAssertEqual(SessionStatus(rawValue: "on_route"), .onRoute)
+        XCTAssertEqual(SessionStatus(rawValue: "thinking"), .thinking)
         XCTAssertEqual(SessionStatus(rawValue: "waiting_for_input"), .waitingForInput)
         XCTAssertNil(SessionStatus(rawValue: "nonexistent"))
     }
@@ -38,7 +38,7 @@ final class ModelTests: XCTestCase {
     // MARK: - SidebarItem
 
     func testSidebarItemNarrationCase() {
-        let entry = NarrationEntry(timestamp: Date(), text: "Testing", status: .onRoute)
+        let entry = NarrationEntry(timestamp: Date(), text: "Testing", status: .thinking)
         let item = SidebarItem.narration(entry)
         XCTAssertEqual(item.id, entry.id)
         XCTAssertEqual(item.timestamp, entry.timestamp)
@@ -181,9 +181,9 @@ final class ModelTests: XCTestCase {
 
     func testNarrationEntryInit() {
         let now = Date()
-        let entry = NarrationEntry(timestamp: now, text: "Agent is reading files", status: .onRoute)
+        let entry = NarrationEntry(timestamp: now, text: "Agent is reading files", status: .thinking)
         XCTAssertEqual(entry.text, "Agent is reading files")
-        XCTAssertEqual(entry.status, .onRoute)
+        XCTAssertEqual(entry.status, .thinking)
         XCTAssertEqual(entry.timestamp, now)
     }
 

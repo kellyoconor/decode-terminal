@@ -91,7 +91,7 @@ struct OnboardingView: View {
         HStack(alignment: .top, spacing: Theme.spaceLG) {
             Image(systemName: icon)
                 .font(.system(size: Theme.fontCallout))
-                .foregroundColor(theme.onRouteColor)
+                .foregroundColor(theme.activeColor)
                 .frame(width: Theme.spaceXXL)
 
             VStack(alignment: .leading, spacing: Theme.spaceXS) {

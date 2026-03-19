@@ -24,9 +24,9 @@ struct StatusPillView: View {
 
     private var statusColor: Color {
         switch status {
-        case .onRoute: return theme.onRouteColor
-        case .drifting: return theme.driftingAmber
-        case .stuck: return theme.stuckRed
+        case .thinking: return theme.activeColor
+        case .exploring: return theme.exploringAmber
+        case .blocked: return theme.blockedRed
         case .waitingForInput: return theme.waitingBlue
         case .idle: return theme.idleGray
         }

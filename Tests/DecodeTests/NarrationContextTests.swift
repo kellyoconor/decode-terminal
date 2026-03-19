@@ -8,7 +8,7 @@ final class NarrationContextTests: XCTestCase {
         return AnnotatedChunk(chunk: chunk, labels: [.agentOutput(text: text)])
     }
 
-    private func makeNarrationEntry(_ text: String, status: SessionStatus = .onRoute) -> NarrationEntry {
+    private func makeNarrationEntry(_ text: String, status: SessionStatus = .thinking) -> NarrationEntry {
         NarrationEntry(timestamp: Date(), text: text, status: status)
     }
 
@@ -30,7 +30,7 @@ final class NarrationContextTests: XCTestCase {
     func testSerializeIncludesAgentTypeAndStatus() {
         let context = NarrationContext()
         context.agentType = .claudeCode
-        context.currentStatus = .onRoute
+        context.currentStatus = .thinking
 
         context.addChunk(makeAnnotatedChunk("Reading file.swift"))
 

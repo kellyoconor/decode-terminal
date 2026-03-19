@@ -114,17 +114,17 @@ struct Theme {
 
     // MARK: - Status colors (desaturated ~12% in dark mode)
 
-    var onRouteColor: Color {
+    var activeColor: Color {
         colorScheme == .dark
             ? Color(red: 0.120, green: 0.580, blue: 0.290)
             : Color(red: 0.086, green: 0.639, blue: 0.290)
     }
-    var driftingAmber: Color {
+    var exploringAmber: Color {
         colorScheme == .dark
             ? Color(red: 0.880, green: 0.590, blue: 0.100)
             : Color(red: 0.961, green: 0.620, blue: 0.043)
     }
-    var stuckRed: Color {
+    var blockedRed: Color {
         colorScheme == .dark
             ? Color(red: 0.850, green: 0.300, blue: 0.300)
             : Color(red: 0.937, green: 0.267, blue: 0.267)

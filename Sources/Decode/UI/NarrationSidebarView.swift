@@ -59,7 +59,7 @@ struct NarrationSidebarView: View {
                 HStack {
                     Text(session.currentStatus.displayLabel)
                         .font(.system(size: Theme.fontSubhead, weight: .semibold))
-                        .foregroundColor(theme.onRouteColor)
+                        .foregroundColor(theme.activeColor)
                     Spacer()
                     Text(sessionDuration)
                         .font(.system(size: Theme.fontSubhead))
