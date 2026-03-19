@@ -4,9 +4,8 @@ import SwiftUI
 struct GitBranchView: View {
     let gitState: GitState
 
-    private let mutedText = Color(red: 0.549, green: 0.549, blue: 0.522)
-    private let addedGreen = Color(red: 0.204, green: 0.718, blue: 0.357)
-    private let removedRed = Color(red: 0.910, green: 0.329, blue: 0.329)
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { Theme(colorScheme: colorScheme) }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -14,12 +13,13 @@ struct GitBranchView: View {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.triangle.branch")
                     .font(.system(size: 11))
-                    .foregroundColor(mutedText)
+                    .foregroundColor(theme.mutedText)
                 Text(gitState.branch)
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundColor(mutedText)
+                    .foregroundColor(theme.mutedText)
                     .lineLimit(1)
             }
+            .accessibilityLabel("Git branch: \(gitState.branch)")
 
             Spacer()
 
@@ -28,11 +28,12 @@ struct GitBranchView: View {
                 HStack(spacing: 6) {
                     Text("+\(gitState.linesAdded)")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(addedGreen)
+                        .foregroundColor(theme.addedGreen)
                     Text("-\(gitState.linesRemoved)")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(removedRed)
+                        .foregroundColor(theme.removedRed)
                 }
+                .accessibilityLabel("\(gitState.linesAdded) lines added, \(gitState.linesRemoved) lines removed")
             }
 
             // Files changed
@@ -40,10 +41,10 @@ struct GitBranchView: View {
                 HStack(spacing: 3) {
                     Image(systemName: "doc.text")
                         .font(.system(size: 10))
-                        .foregroundColor(mutedText)
+                        .foregroundColor(theme.mutedText)
                     Text("\(gitState.filesChanged)")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(mutedText)
+                        .foregroundColor(theme.mutedText)
                 }
             }
         }

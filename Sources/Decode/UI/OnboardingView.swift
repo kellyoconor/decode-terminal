@@ -2,12 +2,13 @@ import SwiftUI
 
 struct OnboardingView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { Theme(colorScheme: colorScheme) }
+
     @State private var apiKeyInput = ""
     @State private var currentStep = 0
-
-    private let warmBg = Color(red: 0.980, green: 0.980, blue: 0.969)
-    private let mutedText = Color(red: 0.549, green: 0.549, blue: 0.522)
-    private let accentGreen = Color(red: 0.086, green: 0.639, blue: 0.290)
+    @State private var isValidating = false
+    @State private var validationError: String? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,14 +28,14 @@ struct OnboardingView: View {
             HStack(spacing: 8) {
                 ForEach(0..<3) { i in
                     Circle()
-                        .fill(i == currentStep ? Color(red: 0.102, green: 0.102, blue: 0.102) : Color(red: 0.830, green: 0.830, blue: 0.810))
+                        .fill(i == currentStep ? theme.primaryText : theme.borderColor)
                         .frame(width: 6, height: 6)
                 }
             }
             .padding(.bottom, 32)
         }
         .frame(width: 480, height: 420)
-        .background(warmBg)
+        .background(theme.sidebarBg)
     }
 
     private var welcomeStep: some View {
@@ -49,7 +50,7 @@ struct OnboardingView: View {
 
                 Text("A native macOS terminal with an AI sidebar that narrates what your coding agent is doing — in plain language, in real time.")
                     .font(.system(size: 13))
-                    .foregroundColor(mutedText)
+                    .foregroundColor(theme.mutedText)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
                     .frame(maxWidth: 360)
@@ -59,7 +60,7 @@ struct OnboardingView: View {
                 withAnimation { currentStep = 1 }
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(red: 0.102, green: 0.102, blue: 0.102))
+            .tint(theme.actionColor)
         }
     }
 
@@ -76,7 +77,7 @@ struct OnboardingView: View {
                 withAnimation { currentStep = 2 }
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(red: 0.102, green: 0.102, blue: 0.102))
+            .tint(theme.actionColor)
         }
     }
 
@@ -84,7 +85,7 @@ struct OnboardingView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundColor(accentGreen)
+                .foregroundColor(theme.onRouteColor)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -92,7 +93,7 @@ struct OnboardingView: View {
                     .font(.system(size: 13, weight: .semibold))
                 Text(desc)
                     .font(.system(size: 12))
-                    .foregroundColor(mutedText)
+                    .foregroundColor(theme.mutedText)
                     .lineSpacing(2)
             }
         }
@@ -105,7 +106,7 @@ struct OnboardingView: View {
                     .font(.system(size: 18, weight: .semibold))
                 Text("Decode uses Claude Haiku to narrate your sessions.\nYour key is stored in macOS Keychain.")
                     .font(.system(size: 12))
-                    .foregroundColor(mutedText)
+                    .foregroundColor(theme.mutedText)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
             }
@@ -113,20 +114,45 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Anthropic API Key")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(mutedText)
+                    .foregroundColor(theme.mutedText)
                 SecureField("sk-ant-...", text: $apiKeyInput)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 13, design: .monospaced))
                     .frame(maxWidth: 320)
+                Link("Get an API key at console.anthropic.com", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(red: 0.231, green: 0.510, blue: 0.965))
             }
 
             Button("Start navigating") {
-                appState.saveAPIKey(apiKeyInput)
-                appState.completeOnboarding()
+                Task {
+                    isValidating = true
+                    validationError = nil
+                    let result = await ClaudeAPIClient.validateKey(apiKeyInput)
+                    isValidating = false
+                    switch result {
+                    case .success:
+                        appState.saveAPIKey(apiKeyInput)
+                        appState.completeOnboarding()
+                    case .failure(let error):
+                        validationError = error.localizedDescription
+                    }
+                }
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(red: 0.102, green: 0.102, blue: 0.102))
-            .disabled(apiKeyInput.trimmingCharacters(in: .whitespaces).isEmpty)
+            .tint(theme.actionColor)
+            .disabled(apiKeyInput.trimmingCharacters(in: .whitespaces).isEmpty || isValidating)
+
+            if isValidating {
+                ProgressView()
+                    .controlSize(.small)
+            }
+
+            if let validationError {
+                Text(validationError)
+                    .font(.system(size: 12))
+                    .foregroundColor(.red)
+            }
         }
     }
 }

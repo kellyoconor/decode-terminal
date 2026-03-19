@@ -3,13 +3,8 @@ import SwiftUI
 /// The warm, light narration sidebar — the "human layer."
 struct NarrationSidebarView: View {
     @ObservedObject var session: SessionController
-
-    // Warm cream/paper palette
-    private let sidebarBg = Color(red: 0.980, green: 0.980, blue: 0.969) // #FAFAF7
-    private let cardBg = Color(red: 0.941, green: 0.941, blue: 0.922) // #F0F0EB
-    private let borderColor = Color(red: 0.910, green: 0.910, blue: 0.890) // #E8E8E3
-    private let mutedText = Color(red: 0.549, green: 0.549, blue: 0.522) // #8C8C85
-    private let subtleText = Color(red: 0.639, green: 0.639, blue: 0.612) // #A3A39C
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { Theme(colorScheme: colorScheme) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -17,27 +12,30 @@ struct NarrationSidebarView: View {
             HStack {
                 Text("Navigator")
                     .font(.system(size: 12, weight: .medium, design: .default))
-                    .foregroundColor(mutedText)
+                    .foregroundColor(theme.mutedText)
                     .tracking(1)
+                    .accessibilityLabel("Navigator sidebar")
                 Spacer()
                 if session.isNarrating {
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(Color(red: 0.204, green: 0.827, blue: 0.600)) // #34D399
+                            .fill(theme.watchingGreen)
                             .frame(width: 6, height: 6)
                         Text("Watching")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(Color(red: 0.204, green: 0.827, blue: 0.600))
+                            .foregroundColor(theme.watchingGreen)
                     }
+                    .accessibilityLabel("Status: Watching")
                 } else if session.detectedAgent != .unknown {
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(Color(red: 0.204, green: 0.827, blue: 0.600))
+                            .fill(theme.watchingGreen)
                             .frame(width: 6, height: 6)
                         Text("Connected")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(Color(red: 0.204, green: 0.827, blue: 0.600))
+                            .foregroundColor(theme.watchingGreen)
                     }
+                    .accessibilityLabel("Status: Connected")
                 }
             }
             .padding(.horizontal, 24)
@@ -54,26 +52,26 @@ struct NarrationSidebarView: View {
             }
 
             Divider()
-                .background(borderColor)
+                .background(theme.borderColor)
 
             // Status card
             if session.currentStatus != .idle {
                 HStack {
                     Text(session.currentStatus.displayLabel)
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Color(red: 0.086, green: 0.639, blue: 0.290))
+                        .foregroundColor(theme.onRouteColor)
                     Spacer()
                     Text(sessionDuration)
                         .font(.system(size: 12))
-                        .foregroundColor(subtleText)
+                        .foregroundColor(theme.subtleText)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(cardBg)
+                .background(theme.cardBg)
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(borderColor, lineWidth: 1)
+                        .stroke(theme.borderColor, lineWidth: 1)
                 )
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
@@ -101,17 +99,17 @@ struct NarrationSidebarView: View {
 
             Spacer(minLength: 0)
         }
-        .background(sidebarBg)
+        .background(theme.sidebarBg)
     }
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Waiting for an agent session...")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(mutedText)
+                .foregroundColor(theme.mutedText)
             Text("Launch Claude Code, Codex, or another AI agent in the terminal. Decode will start narrating automatically.")
                 .font(.system(size: 12))
-                .foregroundColor(subtleText)
+                .foregroundColor(theme.subtleText)
                 .lineSpacing(4)
         }
         .padding(.top, 24)

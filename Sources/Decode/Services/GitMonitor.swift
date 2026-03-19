@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import Darwin
+import os
 
 /// Polls git state in the terminal's working directory.
 /// Detects branch, diff stats, and new commits.
@@ -127,6 +128,7 @@ final class GitMonitor: ObservableObject {
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             return String(data: data, encoding: .utf8)
         } catch {
+            Log.git.error("Git command failed: git \(args.joined(separator: " ")) — \(error.localizedDescription)")
             return nil
         }
     }

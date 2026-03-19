@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import os
 
 /// Simple Keychain wrapper for storing the Claude API key.
 final class KeychainService {
@@ -7,8 +8,9 @@ final class KeychainService {
     private let service = "dev.decode.app"
     private let account = "anthropic-api-key"
 
-    func saveAPIKey(_ key: String) {
-        guard let data = key.data(using: .utf8) else { return }
+    @discardableResult
+    func saveAPIKey(_ key: String) -> Bool {
+        guard let data = key.data(using: .utf8) else { return false }
 
         // Delete existing
         let deleteQuery: [String: Any] = [
@@ -16,7 +18,10 @@ final class KeychainService {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account
         ]
-        SecItemDelete(deleteQuery as CFDictionary)
+        let deleteStatus = SecItemDelete(deleteQuery as CFDictionary)
+        if deleteStatus != errSecSuccess && deleteStatus != errSecItemNotFound {
+            Log.keychain.error("Failed to delete existing keychain item: \(deleteStatus)")
+        }
 
         // Add new
         let addQuery: [String: Any] = [
@@ -25,7 +30,12 @@ final class KeychainService {
             kSecAttrAccount as String: account,
             kSecValueData as String: data
         ]
-        SecItemAdd(addQuery as CFDictionary, nil)
+        let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+        if addStatus != errSecSuccess {
+            Log.keychain.error("Failed to save API key to keychain: \(addStatus)")
+            return false
+        }
+        return true
     }
 
     func getAPIKey() -> String? {
@@ -43,6 +53,9 @@ final class KeychainService {
         guard status == errSecSuccess,
               let data = result as? Data,
               let key = String(data: data, encoding: .utf8) else {
+            if status != errSecItemNotFound {
+                Log.keychain.error("Failed to retrieve API key from keychain: \(status)")
+            }
             return nil
         }
         return key
@@ -54,6 +67,9 @@ final class KeychainService {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account
         ]
-        SecItemDelete(query as CFDictionary)
+        let status = SecItemDelete(query as CFDictionary)
+        if status != errSecSuccess && status != errSecItemNotFound {
+            Log.keychain.error("Failed to delete API key from keychain: \(status)")
+        }
     }
 }

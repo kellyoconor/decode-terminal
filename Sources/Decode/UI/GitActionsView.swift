@@ -5,14 +5,13 @@ struct GitActionsView: View {
     let ptyTap: PTYTap
     let gitState: GitState
 
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { Theme(colorScheme: colorScheme) }
+
     @State private var showCommitConfirm = false
     @State private var showPushConfirm = false
     @State private var showPRConfirm = false
     @State private var commitMessage = ""
-
-    private let borderColor = Color(red: 0.910, green: 0.910, blue: 0.890)
-    private let mutedText = Color(red: 0.549, green: 0.549, blue: 0.522)
-    private let actionColor = Color(red: 0.102, green: 0.102, blue: 0.102)
 
     var body: some View {
         HStack(spacing: 8) {
@@ -55,8 +54,6 @@ struct GitActionsView: View {
         }
     }
 
-    private let shortcutColor = Color(red: 0.749, green: 0.749, blue: 0.729)
-
     private func actionButton(icon: String, label: String, shortcut: String? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 4) {
@@ -67,24 +64,38 @@ struct GitActionsView: View {
                 if let shortcut {
                     Text(shortcut)
                         .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .foregroundColor(shortcutColor)
+                        .foregroundColor(theme.shortcutColor)
                         .padding(.horizontal, 4)
                         .padding(.vertical, 1)
-                        .background(Color(red: 0.941, green: 0.941, blue: 0.922))
+                        .background(theme.shortcutBg)
                         .cornerRadius(3)
                 }
             }
-            .foregroundColor(actionColor)
+            .foregroundColor(theme.actionColor)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(Color.white)
+            .background(theme.buttonBg)
             .cornerRadius(6)
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
-                    .stroke(borderColor, lineWidth: 1)
+                    .stroke(theme.borderColor, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Git \(label)")
+        .accessibilityHint("Double-tap to \(label.lowercased())")
+    }
+
+    /// POSIX-safe shell escaping: wraps in single quotes, escapes embedded single quotes.
+    private func shellEscape(_ str: String) -> String {
+        // Replace ' with '\'' (end quote, escaped quote, start quote)
+        let escaped = str.replacingOccurrences(of: "'", with: "'\\''")
+        // Also strip any control characters that could break the shell
+        let cleaned = escaped.unicodeScalars.filter { scalar in
+            // Allow printable ASCII + common unicode (letters, symbols, emoji)
+            scalar.value >= 0x20 || scalar == "\n" || scalar == "\t"
+        }
+        return "'" + String(String.UnicodeScalarView(cleaned)) + "'"
     }
 
     private var commitSheet: some View {
@@ -96,16 +107,16 @@ struct GitActionsView: View {
                 if gitState.linesAdded > 0 {
                     Text("+\(gitState.linesAdded)")
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(Color(red: 0.204, green: 0.718, blue: 0.357))
+                        .foregroundColor(theme.addedGreen)
                 }
                 if gitState.linesRemoved > 0 {
                     Text("-\(gitState.linesRemoved)")
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(Color(red: 0.910, green: 0.329, blue: 0.329))
+                        .foregroundColor(theme.removedRed)
                 }
                 Text("\(gitState.filesChanged) file\(gitState.filesChanged == 1 ? "" : "s")")
                     .font(.system(size: 12))
-                    .foregroundColor(mutedText)
+                    .foregroundColor(theme.mutedText)
             }
 
             TextField("Commit message", text: $commitMessage)
@@ -122,8 +133,8 @@ struct GitActionsView: View {
 
                 Button("Commit") {
                     let msg = commitMessage.isEmpty ? "Update" : commitMessage
-                    let escaped = msg.replacingOccurrences(of: "'", with: "'\\''")
-                    ptyTap.injectCommand("git add -A && git commit -m '\(escaped)'")
+                    let escaped = shellEscape(msg)
+                    ptyTap.injectCommand("git add -A && git commit -m \(escaped)")
                     showCommitConfirm = false
                     commitMessage = ""
                 }

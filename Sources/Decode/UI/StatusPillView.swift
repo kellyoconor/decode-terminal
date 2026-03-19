@@ -16,6 +16,7 @@ struct StatusPillView: View {
         .padding(.vertical, 5)
         .background(statusColor.opacity(0.1))
         .clipShape(Capsule())
+        .accessibilityLabel("Status: \(status.displayLabel)")
     }
 
     private var statusColor: Color {

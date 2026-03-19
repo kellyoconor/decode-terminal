@@ -4,29 +4,27 @@ import SwiftUI
 struct GitCommitCardView: View {
     let commit: GitCommitInfo
 
-    private let commitColor = Color(red: 0.933, green: 0.510, blue: 0.118) // warm amber
-    private let addedGreen = Color(red: 0.204, green: 0.718, blue: 0.357)
-    private let removedRed = Color(red: 0.910, green: 0.329, blue: 0.329)
-    private let subtleText = Color(red: 0.639, green: 0.639, blue: 0.612)
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { Theme(colorScheme: colorScheme) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 12))
-                    .foregroundColor(commitColor)
+                    .foregroundColor(theme.commitColor)
                 Text("Committed")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(commitColor)
+                    .foregroundColor(theme.commitColor)
                 Spacer()
                 Text(timeLabel)
                     .font(.system(size: 11))
-                    .foregroundColor(subtleText)
+                    .foregroundColor(theme.subtleText)
             }
 
             Text(commit.message)
                 .font(.system(size: 13, weight: .regular, design: .default))
-                .foregroundColor(Color(red: 0.102, green: 0.102, blue: 0.102))
+                .foregroundColor(theme.primaryText)
                 .lineSpacing(4)
                 .lineLimit(2)
 
@@ -37,33 +35,34 @@ struct GitCommitCardView: View {
                     Text("\(commit.filesChanged) file\(commit.filesChanged == 1 ? "" : "s")")
                         .font(.system(size: 11))
                 }
-                .foregroundColor(subtleText)
+                .foregroundColor(theme.subtleText)
 
                 if commit.linesAdded > 0 {
                     Text("+\(commit.linesAdded)")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(addedGreen)
+                        .foregroundColor(theme.addedGreen)
                 }
                 if commit.linesRemoved > 0 {
                     Text("-\(commit.linesRemoved)")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(removedRed)
+                        .foregroundColor(theme.removedRed)
                 }
 
                 Spacer()
 
                 Text(commit.hash)
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(subtleText)
+                    .foregroundColor(theme.subtleText)
             }
         }
         .padding(14)
-        .background(commitColor.opacity(0.06))
+        .background(theme.commitColor.opacity(0.06))
         .cornerRadius(8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(commitColor.opacity(0.2), lineWidth: 1)
+                .stroke(theme.commitColor.opacity(0.2), lineWidth: 1)
         )
+        .accessibilityLabel("Committed: \(commit.message), \(commit.filesChanged) files changed")
     }
 
     private var timeLabel: String {

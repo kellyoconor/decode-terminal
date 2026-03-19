@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Saves and loads narration session history to disk.
 enum SessionPersistence {
@@ -6,7 +7,11 @@ enum SessionPersistence {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Decode", isDirectory: true)
             .appendingPathComponent("Sessions", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            Log.session.error("Failed to create sessions directory: \(error.localizedDescription)")
+        }
         return dir
     }()
 
@@ -44,8 +49,11 @@ enum SessionPersistence {
         )
 
         let file = sessionsDir.appendingPathComponent("\(sessionId).json")
-        if let data = try? JSONEncoder().encode(saved) {
-            try? data.write(to: file, options: .atomic)
+        do {
+            let data = try JSONEncoder().encode(saved)
+            try data.write(to: file, options: .atomic)
+        } catch {
+            Log.session.error("Failed to save session to \(file.path): \(error.localizedDescription)")
         }
     }
 

@@ -2,12 +2,12 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { Theme(colorScheme: colorScheme) }
+
     @State private var apiKeyInput: String = ""
     @State private var isSaving = false
-
-    private let sidebarBg = Color(red: 0.980, green: 0.980, blue: 0.969)
-    private let cardBg = Color(red: 0.941, green: 0.941, blue: 0.922)
-    private let borderColor = Color(red: 0.910, green: 0.910, blue: 0.890)
+    @State private var validationError: String? = nil
 
     var body: some View {
         VStack(spacing: 24) {
@@ -27,6 +27,9 @@ struct SettingsView: View {
                 SecureField("sk-ant-...", text: $apiKeyInput)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 13, design: .monospaced))
+                Link("Get an API key at console.anthropic.com", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(red: 0.231, green: 0.510, blue: 0.965))
             }
 
             Button(action: save) {
@@ -39,8 +42,14 @@ struct SettingsView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(red: 0.102, green: 0.102, blue: 0.102))
+            .tint(theme.actionColor)
             .disabled(apiKeyInput.isEmpty || isSaving)
+
+            if let validationError {
+                Text(validationError)
+                    .font(.system(size: 12))
+                    .foregroundColor(.red)
+            }
 
             Text("Your key is stored in macOS Keychain.")
                 .font(.system(size: 11))
@@ -48,15 +57,24 @@ struct SettingsView: View {
         }
         .padding(40)
         .frame(width: 400)
-        .background(sidebarBg)
+        .background(theme.sidebarBg)
         .onAppear {
             apiKeyInput = appState.apiKey
         }
     }
 
     private func save() {
-        isSaving = true
-        appState.saveAPIKey(apiKeyInput)
-        isSaving = false
+        Task {
+            isSaving = true
+            validationError = nil
+            let result = await ClaudeAPIClient.validateKey(apiKeyInput)
+            isSaving = false
+            switch result {
+            case .success:
+                appState.saveAPIKey(apiKeyInput)
+            case .failure(let error):
+                validationError = error.localizedDescription
+            }
+        }
     }
 }

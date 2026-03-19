@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import os
 
 /// Orchestrates narration: decides when to fire, calls Claude API, parses responses.
 @MainActor
@@ -87,9 +88,13 @@ final class NarrationEngine: ObservableObject {
         var status: SessionStatus = context.currentStatus
         var lastError: Error?
 
+        Log.narration.debug("Narration firing, \(context.newChunkCount) new chunks")
+
         for attempt in 0...maxRetries {
             if attempt > 0 {
-                try? await Task.sleep(nanoseconds: UInt64(attempt) * 1_000_000_000)
+                Log.narration.info("Narration retry attempt \(attempt)")
+                let delay = UInt64(1) << UInt64(attempt) // 2s, 4s
+                try? await Task.sleep(nanoseconds: delay * 1_000_000_000)
             }
 
             fullText = ""
@@ -122,6 +127,7 @@ final class NarrationEngine: ObservableObject {
         }
 
         if let error = lastError, fullText.isEmpty {
+            Log.narration.error("Narration failed after \(self.maxRetries + 1) attempts: \(error.localizedDescription)")
             consecutiveFailures += 1
             if consecutiveFailures <= 3 {
                 fullText = "Narration temporarily unavailable."

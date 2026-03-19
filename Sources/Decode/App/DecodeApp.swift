@@ -1,8 +1,15 @@
 import SwiftUI
 import AppKit
 
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillTerminate(_ notification: Notification) {
+        NotificationCenter.default.post(name: Notification.Name("appWillTerminate"), object: nil)
+    }
+}
+
 @main
 struct DecodeApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
 
     init() {

@@ -8,56 +8,99 @@ struct ClaudeCodeGrammar: AgentGrammarProtocol {
     // MARK: - Detection patterns
 
     /// Claude Code signature markers in early output
-    private static let startupPatterns: [NSRegularExpression] = [
-        try! NSRegularExpression(pattern: "(?i)claude\\s*(code)?", options: []),
-        try! NSRegularExpression(pattern: "[╭╮╰╯┌┐└┘]", options: []),
-        try! NSRegularExpression(pattern: "(?i)anthropic", options: []),
-    ]
+    private static let startupPatterns: [NSRegularExpression] = {
+        let patterns: [(String, String, [NSRegularExpression.Options])] = [
+            ("startupPattern[0]", "(?i)claude\\s*(code)?", []),
+            ("startupPattern[1]", "[╭╮╰╯┌┐└┘]", []),
+            ("startupPattern[2]", "(?i)anthropic", []),
+        ]
+        return patterns.map { name, pattern, options in
+            guard let regex = try? NSRegularExpression(pattern: pattern, options: NSRegularExpression.Options(rawValue: options.reduce(0) { $0 | $1.rawValue })) else {
+                fatalError("ClaudeCodeGrammar: invalid \(name) regex — this is a programming error")
+            }
+            return regex
+        }
+    }()
 
     // MARK: - Annotation patterns
 
     /// Tool call headers: Read, Write, Edit, Bash, Search, Grep, Glob, etc.
-    private static let toolCallPattern = try! NSRegularExpression(
-        pattern: "^\\s*(?:>\\s*)?(Read|Write|Edit|Bash|Search|Grep|Glob|TodoRead|TodoWrite|WebFetch|WebSearch|Agent)\\s*[:(]",
-        options: [.anchorsMatchLines]
-    )
+    private static let toolCallPattern: NSRegularExpression = {
+        guard let regex = try? NSRegularExpression(
+            pattern: "^\\s*(?:>\\s*)?(Read|Write|Edit|Bash|Search|Grep|Glob|TodoRead|TodoWrite|WebFetch|WebSearch|Agent)\\s*[:(]",
+            options: [.anchorsMatchLines]
+        ) else {
+            fatalError("ClaudeCodeGrammar: invalid toolCallPattern regex — this is a programming error")
+        }
+        return regex
+    }()
 
     /// File paths in output
-    private static let filePathPattern = try! NSRegularExpression(
-        pattern: "(?:^|\\s)(/[a-zA-Z0-9_\\-/.]+\\.[a-zA-Z0-9]+)",
-        options: [.anchorsMatchLines]
-    )
+    private static let filePathPattern: NSRegularExpression = {
+        guard let regex = try? NSRegularExpression(
+            pattern: "(?:^|\\s)(/[a-zA-Z0-9_\\-/.]+\\.[a-zA-Z0-9]+)",
+            options: [.anchorsMatchLines]
+        ) else {
+            fatalError("ClaudeCodeGrammar: invalid filePathPattern regex — this is a programming error")
+        }
+        return regex
+    }()
 
     /// Permission prompts — only match explicit permission UI, not generic text
-    private static let permissionPattern = try! NSRegularExpression(
-        pattern: "(?i)(Do you want to (?:create|edit|delete|write|run|execute|overwrite)|allow.*edits.*this session|Esc to cancel)",
-        options: []
-    )
+    private static let permissionPattern: NSRegularExpression = {
+        guard let regex = try? NSRegularExpression(
+            pattern: "(?i)(Do you want to (?:create|edit|delete|write|run|execute|overwrite)|allow.*edits.*this session|Esc to cancel)",
+            options: []
+        ) else {
+            fatalError("ClaudeCodeGrammar: invalid permissionPattern regex — this is a programming error")
+        }
+        return regex
+    }()
 
     /// Test execution
-    private static let testRunPattern = try! NSRegularExpression(
-        pattern: "(?i)(npm\\s+test|pytest|cargo\\s+test|go\\s+test|jest|vitest|mocha)",
-        options: []
-    )
+    private static let testRunPattern: NSRegularExpression = {
+        guard let regex = try? NSRegularExpression(
+            pattern: "(?i)(npm\\s+test|pytest|cargo\\s+test|go\\s+test|jest|vitest|mocha)",
+            options: []
+        ) else {
+            fatalError("ClaudeCodeGrammar: invalid testRunPattern regex — this is a programming error")
+        }
+        return regex
+    }()
 
     /// Test results
-    private static let testResultPattern = try! NSRegularExpression(
-        pattern: "(?i)(PASS|FAIL|passed|failed|Tests?:?\\s*\\d+)",
-        options: []
-    )
+    private static let testResultPattern: NSRegularExpression = {
+        guard let regex = try? NSRegularExpression(
+            pattern: "(?i)(PASS|FAIL|passed|failed|Tests?:?\\s*\\d+)",
+            options: []
+        ) else {
+            fatalError("ClaudeCodeGrammar: invalid testResultPattern regex — this is a programming error")
+        }
+        return regex
+    }()
 
     /// Error patterns
-    private static let errorPattern = try! NSRegularExpression(
-        pattern: "(?i)(^error|\\berror:|\\bError\\b|FAIL\\b|failed|panic|exception|traceback)",
-        options: [.anchorsMatchLines]
-    )
+    private static let errorPattern: NSRegularExpression = {
+        guard let regex = try? NSRegularExpression(
+            pattern: "(?i)(^error|\\berror:|\\bError\\b|FAIL\\b|failed|panic|exception|traceback)",
+            options: [.anchorsMatchLines]
+        ) else {
+            fatalError("ClaudeCodeGrammar: invalid errorPattern regex — this is a programming error")
+        }
+        return regex
+    }()
 
     /// User input prompt (Claude Code waiting for input)
     /// NOTE: Do NOT match `^\s*>\s*$` — that's the normal Claude Code prompt, not a request for input.
-    private static let userInputPattern = try! NSRegularExpression(
-        pattern: "Interrupted|What should Claude do|Do you want to (?:create|edit|delete|write|run|execute|overwrite)|(?:Yes|No)\\s*/\\s*(?:Yes|No)|allow.*edits.*this session",
-        options: [.anchorsMatchLines, .caseInsensitive]
-    )
+    private static let userInputPattern: NSRegularExpression = {
+        guard let regex = try? NSRegularExpression(
+            pattern: "Interrupted|What should Claude do|Do you want to (?:create|edit|delete|write|run|execute|overwrite)|(?:Yes|No)\\s*/\\s*(?:Yes|No)|allow.*edits.*this session",
+            options: [.anchorsMatchLines, .caseInsensitive]
+        ) else {
+            fatalError("ClaudeCodeGrammar: invalid userInputPattern regex — this is a programming error")
+        }
+        return regex
+    }()
 
     // MARK: - AgentGrammarProtocol
 
@@ -161,8 +204,12 @@ struct ClaudeCodeGrammar: AgentGrammarProtocol {
     }
 
     private func parseTestCounts(text: String) -> (passed: Int, failed: Int) {
-        let passedRegex = try! NSRegularExpression(pattern: "(\\d+)\\s*passed", options: [.caseInsensitive])
-        let failedRegex = try! NSRegularExpression(pattern: "(\\d+)\\s*failed", options: [.caseInsensitive])
+        guard let passedRegex = try? NSRegularExpression(pattern: "(\\d+)\\s*passed", options: [.caseInsensitive]) else {
+            fatalError("ClaudeCodeGrammar: invalid passedRegex regex — this is a programming error")
+        }
+        guard let failedRegex = try? NSRegularExpression(pattern: "(\\d+)\\s*failed", options: [.caseInsensitive]) else {
+            fatalError("ClaudeCodeGrammar: invalid failedRegex regex — this is a programming error")
+        }
         let range = NSRange(text.startIndex..., in: text)
 
         var passed = 0

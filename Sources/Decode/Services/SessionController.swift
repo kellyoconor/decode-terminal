@@ -1,5 +1,7 @@
 import Foundation
 import Combine
+import AppKit
+import os
 
 /// Orchestrates the full pipeline: PTY → Chunking → Grammar → Narration → UI.
 @MainActor
@@ -61,12 +63,42 @@ final class SessionController: ObservableObject {
                 self?.sidebarItems.append(.commit(commit))
             }
             .store(in: &cancellables)
+
+        // Save session on app termination
+        NotificationCenter.default.addObserver(forName: Notification.Name("appWillTerminate"), object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in
+                self?.autoSave()
+            }
+        }
     }
 
     func configure(apiKey: String) {
+        Log.session.info("Session configured with API key")
         narrationEngine.configure(apiKey: apiKey)
 
         // Start the narration check timer
+        resumeNarrationTimer()
+
+        // Pause narration timer on system sleep, resume on wake
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.pauseNarrationTimer()
+            }
+        }
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.resumeNarrationTimer()
+            }
+        }
+    }
+
+    private func pauseNarrationTimer() {
+        narrationTimer?.invalidate()
+        narrationTimer = nil
+    }
+
+    private func resumeNarrationTimer() {
+        guard narrationTimer == nil else { return }
         narrationTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 await self?.checkAndNarrate()
@@ -83,6 +115,7 @@ final class SessionController: ObservableObject {
                 isDetectionLocked = true
                 detectedAgent = grammar.agentType
                 narrationContext.agentType = grammar.agentType
+                Log.session.info("Agent detected: \(String(describing: self.grammar.agentType))")
             }
 
             // Capture the first user command as the "original prompt"

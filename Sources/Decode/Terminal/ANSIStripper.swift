@@ -15,7 +15,12 @@ enum ANSIStripper {
     private static let spinnerPattern = "[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏⣾⣽⣻⢿⡿⣟⣯⣷◐◓◑◒◴◷◶◵⠁⠂⠄⡀⢀⠠⠐⠈|/\\-\\\\](?=[|/\\-\\\\⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏])"
 
     private static let combinedPattern = [csiPattern, oscPattern, simpleEscPattern, crPattern].joined(separator: "|")
-    private static let regex = try! NSRegularExpression(pattern: combinedPattern, options: [])
+    private static let regex: NSRegularExpression = {
+        guard let regex = try? NSRegularExpression(pattern: combinedPattern, options: []) else {
+            fatalError("ANSIStripper: invalid regex pattern — this is a programming error")
+        }
+        return regex
+    }()
 
     /// Strip all ANSI escape sequences from the input string.
     static func strip(_ input: String) -> String {
