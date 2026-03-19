@@ -11,35 +11,35 @@ struct NarrationSidebarView: View {
             // Header
             HStack {
                 Text("Navigator")
-                    .font(.system(size: 12, weight: .medium, design: .default))
+                    .font(.system(size: Theme.fontSubhead, weight: .medium, design: .default))
                     .foregroundColor(theme.mutedText)
                     .tracking(1)
                     .accessibilityLabel("Navigator sidebar")
                 Spacer()
                 if session.isNarrating {
-                    HStack(spacing: 6) {
+                    HStack(spacing: Theme.spaceSM) {
                         Circle()
                             .fill(theme.watchingGreen)
-                            .frame(width: 6, height: 6)
+                            .frame(width: Theme.spaceSM, height: Theme.spaceSM)
                         Text("Watching")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: Theme.fontFootnote, weight: .medium))
                             .foregroundColor(theme.watchingGreen)
                     }
                     .accessibilityLabel("Status: Watching")
                 } else if session.detectedAgent != .unknown {
-                    HStack(spacing: 6) {
+                    HStack(spacing: Theme.spaceSM) {
                         Circle()
                             .fill(theme.watchingGreen)
-                            .frame(width: 6, height: 6)
+                            .frame(width: Theme.spaceSM, height: Theme.spaceSM)
                         Text("Connected")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: Theme.fontFootnote, weight: .medium))
                             .foregroundColor(theme.watchingGreen)
                     }
                     .accessibilityLabel("Status: Connected")
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 16)
+            .padding(.horizontal, Theme.spaceXXL)
+            .padding(.vertical, Theme.spaceXL)
 
             // Git branch + diff stats + quick actions
             if session.gitState.isGitRepo {
@@ -47,8 +47,8 @@ struct NarrationSidebarView: View {
                     GitBranchView(gitState: session.gitState)
                     GitActionsView(ptyTap: session.ptyTap, gitState: session.gitState)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
+                .padding(.horizontal, Theme.spaceXXL)
+                .padding(.bottom, Theme.spaceLG)
             }
 
             Divider()
@@ -58,28 +58,28 @@ struct NarrationSidebarView: View {
             if session.currentStatus != .idle {
                 HStack {
                     Text(session.currentStatus.displayLabel)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: Theme.fontSubhead, weight: .semibold))
                         .foregroundColor(theme.onRouteColor)
                     Spacer()
                     Text(sessionDuration)
-                        .font(.system(size: 12))
+                        .font(.system(size: Theme.fontSubhead))
                         .foregroundColor(theme.subtleText)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, Theme.spaceXL)
+                .padding(.vertical, Theme.spaceLG)
                 .background(theme.cardBg)
-                .cornerRadius(8)
+                .cornerRadius(Theme.spaceMD)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: Theme.spaceMD)
                         .stroke(theme.borderColor, lineWidth: 1)
                 )
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
+                .padding(.horizontal, Theme.spaceXXL)
+                .padding(.top, Theme.spaceXL)
             }
 
             // Sidebar feed — newest on top, narration + commit cards interleaved
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: Theme.spaceXL) {
                     if session.sidebarItems.isEmpty {
                         emptyState
                     } else {
@@ -93,8 +93,8 @@ struct NarrationSidebarView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 16)
+                .padding(.horizontal, Theme.spaceXXL)
+                .padding(.vertical, Theme.spaceXL)
             }
 
             Spacer(minLength: 0)
@@ -103,16 +103,19 @@ struct NarrationSidebarView: View {
     }
 
     private var emptyState: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Theme.spaceLG) {
+            Image(systemName: "terminal.fill")
+                .font(.system(size: 28))
+                .foregroundColor(theme.borderColor)
             Text("Waiting for an agent session...")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: Theme.fontBody, weight: .medium))
                 .foregroundColor(theme.mutedText)
             Text("Launch Claude Code, Codex, or another AI agent in the terminal. Decode will start narrating automatically.")
-                .font(.system(size: 12))
+                .font(.system(size: Theme.fontSubhead))
                 .foregroundColor(theme.subtleText)
                 .lineSpacing(4)
         }
-        .padding(.top, 24)
+        .padding(.top, Theme.spaceXXL)
     }
 
     private var sessionDuration: String {
