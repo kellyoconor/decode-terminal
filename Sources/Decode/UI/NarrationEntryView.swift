@@ -25,7 +25,7 @@ struct NarrationEntryView: View {
             }
             Text(entry.text)
                 .font(.system(size: 13, weight: .regular, design: .default))
-                .foregroundColor(isRecent ? theme.primaryText : Color(red: 0.290, green: 0.290, blue: 0.271))
+                .foregroundColor(isRecent ? theme.primaryText : theme.mutedText)
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
         }
