@@ -121,7 +121,7 @@ struct OnboardingView: View {
                     .frame(maxWidth: 320)
                 Link("Get an API key at console.anthropic.com", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
                     .font(.system(size: 11))
-                    .foregroundColor(Color(red: 0.231, green: 0.510, blue: 0.965))
+                    .foregroundColor(theme.linkBlue)
             }
 
             Button("Start navigating") {
