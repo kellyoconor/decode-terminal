@@ -14,7 +14,7 @@ struct GitActionsView: View {
     @State private var commitMessage = ""
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Theme.spaceMD) {
             actionButton(icon: "arrow.triangle.branch", label: "Commit", shortcut: "\u{2318}K") {
                 showCommitConfirm = true
             }
@@ -56,16 +56,16 @@ struct GitActionsView: View {
 
     private func actionButton(icon: String, label: String, shortcut: String? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 4) {
+            HStack(spacing: Theme.spaceXS) {
                 Image(systemName: icon)
-                    .font(.system(size: 10))
+                    .font(.system(size: Theme.fontCaption))
                 Text(label)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: Theme.fontFootnote, weight: .medium))
                 if let shortcut {
                     Text(shortcut)
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
+                        .font(.system(size: Theme.fontCaption2, weight: .medium, design: .rounded))
                         .foregroundColor(theme.shortcutColor)
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, Theme.spaceXS)
                         .padding(.vertical, 1)
                         .background(theme.shortcutBg)
                         .cornerRadius(3)
@@ -73,11 +73,11 @@ struct GitActionsView: View {
             }
             .foregroundColor(theme.actionColor)
             .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.vertical, Theme.spaceSM)
             .background(theme.buttonBg)
-            .cornerRadius(6)
+            .cornerRadius(Theme.spaceSM)
             .overlay(
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: Theme.spaceSM)
                     .stroke(theme.borderColor, lineWidth: 1)
             )
         }
@@ -88,40 +88,37 @@ struct GitActionsView: View {
 
     /// POSIX-safe shell escaping: wraps in single quotes, escapes embedded single quotes.
     private func shellEscape(_ str: String) -> String {
-        // Replace ' with '\'' (end quote, escaped quote, start quote)
         let escaped = str.replacingOccurrences(of: "'", with: "'\\''")
-        // Also strip any control characters that could break the shell
         let cleaned = escaped.unicodeScalars.filter { scalar in
-            // Allow printable ASCII + common unicode (letters, symbols, emoji)
             scalar.value >= 0x20 || scalar == "\n" || scalar == "\t"
         }
         return "'" + String(String.UnicodeScalarView(cleaned)) + "'"
     }
 
     private var commitSheet: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: Theme.spaceXL) {
             Text("Commit changes")
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: Theme.fontCallout, weight: .semibold))
 
             HStack(spacing: 10) {
                 if gitState.linesAdded > 0 {
                     Text("+\(gitState.linesAdded)")
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .font(.system(size: Theme.fontSubhead, weight: .medium, design: .monospaced))
                         .foregroundColor(theme.addedGreen)
                 }
                 if gitState.linesRemoved > 0 {
                     Text("-\(gitState.linesRemoved)")
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .font(.system(size: Theme.fontSubhead, weight: .medium, design: .monospaced))
                         .foregroundColor(theme.removedRed)
                 }
                 Text("\(gitState.filesChanged) file\(gitState.filesChanged == 1 ? "" : "s")")
-                    .font(.system(size: 12))
+                    .font(.system(size: Theme.fontSubhead))
                     .foregroundColor(theme.mutedText)
             }
 
             TextField("Commit message", text: $commitMessage)
                 .textFieldStyle(.roundedBorder)
-                .font(.system(size: 13))
+                .font(.system(size: Theme.fontBody))
 
             HStack {
                 Spacer()

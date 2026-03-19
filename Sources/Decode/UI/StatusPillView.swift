@@ -7,12 +7,12 @@ struct StatusPillView: View {
     private var theme: Theme { Theme(colorScheme: colorScheme) }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: Theme.spaceSM) {
             Circle()
                 .fill(statusColor)
-                .frame(width: 6, height: 6)
+                .frame(width: Theme.spaceSM, height: Theme.spaceSM)
             Text(status.displayLabel)
-                .font(.system(size: 11, weight: .semibold, design: .default))
+                .font(.system(size: Theme.fontFootnote, weight: .semibold, design: .default))
                 .foregroundColor(statusColor)
         }
         .padding(.horizontal, 10)

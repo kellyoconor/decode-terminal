@@ -25,31 +25,31 @@ struct OnboardingView: View {
             Spacer()
 
             // Step indicator
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.spaceMD) {
                 ForEach(0..<3) { i in
                     Circle()
                         .fill(i == currentStep ? theme.primaryText : theme.borderColor)
-                        .frame(width: 6, height: 6)
+                        .frame(width: Theme.spaceSM, height: Theme.spaceSM)
                 }
             }
-            .padding(.bottom, 32)
+            .padding(.bottom, Theme.spaceSection)
         }
         .frame(width: 480, height: 420)
         .background(theme.sidebarBg)
     }
 
     private var welcomeStep: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Theme.spaceXXL) {
             Text("decode")
-                .font(.system(size: 32, weight: .bold, design: .monospaced))
+                .font(.system(size: Theme.fontLargeTitle, weight: .bold, design: .monospaced))
 
-            VStack(spacing: 12) {
+            VStack(spacing: Theme.spaceLG) {
                 Text("Google Maps for your terminal.")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: Theme.fontTitle3, weight: .medium))
                     .foregroundColor(theme.primaryText)
 
                 Text("A native macOS terminal with an AI sidebar that narrates what your coding agent is doing — in plain language, in real time.")
-                    .font(.system(size: 13))
+                    .font(.system(size: Theme.fontBody))
                     .foregroundColor(theme.mutedText)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
@@ -57,7 +57,7 @@ struct OnboardingView: View {
             }
 
             Button("Get started") {
-                withAnimation { currentStep = 1 }
+                withAnimation(.easeOut(duration: 0.25)) { currentStep = 1 }
             }
             .buttonStyle(.borderedProminent)
             .tint(theme.actionColor)
@@ -65,8 +65,8 @@ struct OnboardingView: View {
     }
 
     private var howItWorksStep: some View {
-        VStack(spacing: 24) {
-            VStack(alignment: .leading, spacing: 16) {
+        VStack(spacing: Theme.spaceXXL) {
+            VStack(alignment: .leading, spacing: Theme.spaceXL) {
                 featureRow(icon: "terminal", title: "Run your agent", desc: "Launch Claude Code, Codex, or any agent inside Decode.")
                 featureRow(icon: "eye", title: "Sidebar narrates", desc: "The navigator translates terminal output into short, calm updates.")
                 featureRow(icon: "arrow.triangle.branch", title: "Git awareness", desc: "Live branch, diff stats, commit cards, and quick actions.")
@@ -74,7 +74,7 @@ struct OnboardingView: View {
             .frame(maxWidth: 340)
 
             Button("Next") {
-                withAnimation { currentStep = 2 }
+                withAnimation(.easeOut(duration: 0.25)) { currentStep = 2 }
             }
             .buttonStyle(.borderedProminent)
             .tint(theme.actionColor)
@@ -82,17 +82,17 @@ struct OnboardingView: View {
     }
 
     private func featureRow(icon: String, title: String, desc: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: Theme.spaceLG) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(.system(size: Theme.fontCallout))
                 .foregroundColor(theme.onRouteColor)
-                .frame(width: 24)
+                .frame(width: Theme.spaceXXL)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: Theme.spaceXS) {
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: Theme.fontBody, weight: .semibold))
                 Text(desc)
-                    .font(.system(size: 12))
+                    .font(.system(size: Theme.fontSubhead))
                     .foregroundColor(theme.mutedText)
                     .lineSpacing(2)
             }
@@ -100,27 +100,27 @@ struct OnboardingView: View {
     }
 
     private var apiKeyStep: some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 8) {
+        VStack(spacing: Theme.spaceXXL) {
+            VStack(spacing: Theme.spaceMD) {
                 Text("Connect to Claude")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: Theme.fontTitle2, weight: .semibold))
                 Text("Decode uses Claude Haiku to narrate your sessions.\nYour key is stored in macOS Keychain.")
-                    .font(.system(size: 12))
+                    .font(.system(size: Theme.fontSubhead))
                     .foregroundColor(theme.mutedText)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
             }
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Theme.spaceMD) {
                 Text("Anthropic API Key")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: Theme.fontSubhead, weight: .medium))
                     .foregroundColor(theme.mutedText)
                 SecureField("sk-ant-...", text: $apiKeyInput)
                     .textFieldStyle(.roundedBorder)
-                    .font(.system(size: 13, design: .monospaced))
+                    .font(.system(size: Theme.fontBody, design: .monospaced))
                     .frame(maxWidth: 320)
                 Link("Get an API key at console.anthropic.com", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
-                    .font(.system(size: 11))
+                    .font(.system(size: Theme.fontFootnote))
                     .foregroundColor(theme.linkBlue)
             }
 
@@ -150,7 +150,7 @@ struct OnboardingView: View {
 
             if let validationError {
                 Text(validationError)
-                    .font(.system(size: 12))
+                    .font(.system(size: Theme.fontSubhead))
                     .foregroundColor(theme.errorRed)
             }
         }

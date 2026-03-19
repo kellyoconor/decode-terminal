@@ -15,50 +15,49 @@ struct NarrationEntryView: View {
     }
 
     private var standardEntry: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Theme.spaceSM) {
             HStack {
                 Text(entry.timeLabel)
-                    .font(.system(size: 11, weight: .regular, design: .default))
+                    .font(.system(size: Theme.fontFootnote, weight: .regular, design: .default))
                     .foregroundColor(theme.subtleText)
                 Spacer()
                 StatusPillView(status: entry.status)
             }
             Text(entry.text)
-                .font(.system(size: 13, weight: .regular, design: .default))
+                .font(.system(size: Theme.fontBody, weight: .regular, design: .default))
                 .foregroundColor(isRecent ? theme.primaryText : theme.mutedText)
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Theme.spaceXS)
         .accessibilityLabel("\(entry.status.displayLabel): \(entry.text)")
     }
 
-    /// Distinct card for when the agent needs user input
     private var waitingCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: Theme.spaceMD) {
+            HStack(spacing: Theme.spaceMD) {
                 Image(systemName: "hand.raised.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: Theme.fontSubhead))
                     .foregroundColor(theme.waitingBlue)
                 Text("Needs your input")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: Theme.fontSubhead, weight: .semibold))
                     .foregroundColor(theme.waitingBlue)
                 Spacer()
                 Text(entry.timeLabel)
-                    .font(.system(size: 11))
+                    .font(.system(size: Theme.fontFootnote))
                     .foregroundColor(theme.subtleText)
             }
             Text(entry.text)
-                .font(.system(size: 13, weight: .regular, design: .default))
+                .font(.system(size: Theme.fontBody, weight: .regular, design: .default))
                 .foregroundColor(theme.primaryText)
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
         .background(theme.waitingBlue.opacity(0.06))
-        .cornerRadius(8)
+        .cornerRadius(Theme.spaceMD)
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: Theme.spaceMD)
                 .stroke(theme.waitingBlue.opacity(0.2), lineWidth: 1)
         )
         .accessibilityLabel("Agent needs input: \(entry.text)")
