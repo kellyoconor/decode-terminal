@@ -5,6 +5,7 @@ import os
 
 /// Polls git state in the terminal's working directory.
 /// Detects branch, diff stats, and new commits.
+/// Git commands run on a background thread to avoid blocking the UI.
 @MainActor
 final class GitMonitor: ObservableObject {
     @Published var gitState = GitState()
@@ -13,92 +14,104 @@ final class GitMonitor: ObservableObject {
     private var pollTimer: Timer?
     private var shellPid: pid_t?
     private var lastHeadHash: String = ""
-    private var lastCwd: String = ""
+    private var isPollInFlight = false
 
     func start(shellPid: pid_t) {
         self.shellPid = shellPid
         pollTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
-                self?.poll()
+                await self?.poll()
             }
         }
         // Immediate first poll
-        poll()
+        Task { await poll() }
     }
 
     deinit {
         pollTimer?.invalidate()
     }
 
-    private func poll() {
+    private func poll() async {
         guard let pid = shellPid else { return }
-        guard let cwd = cwdForPid(pid), !cwd.isEmpty else { return }
-        lastCwd = cwd
+        guard !isPollInFlight else { return }
+        isPollInFlight = true
+        defer { isPollInFlight = false }
 
-        // Check if this is a git repo (re-checks every poll, so git init mid-session works)
-        guard let repoRoot = runGit(["rev-parse", "--show-toplevel"], in: cwd) else {
-            if gitState.isGitRepo {
-                gitState = GitState() // Left the repo
+        // All git I/O happens off the main thread
+        let lastHash = lastHeadHash
+        let result = await Task.detached { [weak self] () -> PollResult? in
+            guard let self else { return nil }
+            guard let cwd = self.cwdForPid(pid), !cwd.isEmpty else { return nil }
+
+            guard let repoRoot = self.runGit(["rev-parse", "--show-toplevel"], in: cwd) else {
+                return PollResult(state: GitState(), commit: nil)
             }
-            return
-        }
 
-        let workDir = repoRoot.trimmingCharacters(in: .whitespacesAndNewlines)
+            let workDir = repoRoot.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Branch name (returns "HEAD" when detached)
-        var branch = runGit(["rev-parse", "--abbrev-ref", "HEAD"], in: workDir)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        // Handle detached HEAD — show short hash instead
-        if branch == "HEAD" {
-            let shortHash = runGit(["rev-parse", "--short", "HEAD"], in: workDir)?
+            var branch = self.runGit(["rev-parse", "--abbrev-ref", "HEAD"], in: workDir)?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            branch = shortHash.isEmpty ? "detached" : "(\(shortHash))"
+
+            if branch == "HEAD" {
+                let shortHash = self.runGit(["rev-parse", "--short", "HEAD"], in: workDir)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                branch = shortHash.isEmpty ? "detached" : "(\(shortHash))"
+            }
+
+            let headHash = self.runGit(["rev-parse", "--short", "HEAD"], in: workDir)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+            guard !headHash.isEmpty else {
+                return PollResult(
+                    state: GitState(branch: branch, headHash: "", linesAdded: 0, linesRemoved: 0, filesChanged: 0, isGitRepo: true),
+                    commit: nil
+                )
+            }
+
+            let diffStat = self.runGit(["diff", "--shortstat", "HEAD"], in: workDir)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let (files, added, removed) = self.parseShortStat(diffStat)
+
+            let state = GitState(
+                branch: branch,
+                headHash: headHash,
+                linesAdded: added,
+                linesRemoved: removed,
+                filesChanged: files,
+                isGitRepo: true
+            )
+
+            // Detect new commit
+            var commit: GitCommitInfo?
+            if !lastHash.isEmpty && headHash != lastHash {
+                commit = self.buildCommitInfo(in: workDir, newHash: headHash)
+            }
+
+            return PollResult(state: state, commit: commit)
+        }.value
+
+        // Publish results on main thread
+        guard let result else { return }
+        gitState = result.state
+        lastHeadHash = result.state.headHash
+        if let commit = result.commit {
+            latestCommit = commit
         }
-
-        // HEAD hash — may not exist in empty repos
-        let headHash = runGit(["rev-parse", "--short", "HEAD"], in: workDir)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        // No commits yet — show repo as detected but with no stats
-        guard !headHash.isEmpty else {
-            gitState = GitState(branch: branch, headHash: "", linesAdded: 0, linesRemoved: 0, filesChanged: 0, isGitRepo: true)
-            return
-        }
-
-        // Diff stats (unstaged + staged vs HEAD)
-        let diffStat = runGit(["diff", "--shortstat", "HEAD"], in: workDir)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let (files, added, removed) = parseShortStat(diffStat)
-
-        gitState = GitState(
-            branch: branch,
-            headHash: headHash,
-            linesAdded: added,
-            linesRemoved: removed,
-            filesChanged: files,
-            isGitRepo: true
-        )
-
-        // Detect new commits
-        if !lastHeadHash.isEmpty && headHash != lastHeadHash {
-            detectNewCommit(in: workDir, newHash: headHash)
-        }
-        lastHeadHash = headHash
     }
 
-    private func detectNewCommit(in workDir: String, newHash: String) {
+    // MARK: - Background helpers (nonisolated — safe to call from any thread)
+
+    private nonisolated func buildCommitInfo(in workDir: String, newHash: String) -> GitCommitInfo {
         let message = runGit(["log", "-1", "--format=%s"], in: workDir)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? "Commit"
 
-        // Get diff stats — HEAD~1 may not exist for first commit
         let stat = runGit(["diff", "--shortstat", "HEAD~1", "HEAD"], in: workDir)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             ?? runGit(["diff", "--shortstat", "--cached", "HEAD"], in: workDir)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let (files, added, removed) = parseShortStat(stat)
 
-        let commit = GitCommitInfo(
+        return GitCommitInfo(
             hash: newHash,
             message: message,
             filesChanged: files,
@@ -106,12 +119,9 @@ final class GitMonitor: ObservableObject {
             linesRemoved: removed,
             timestamp: Date()
         )
-        latestCommit = commit
     }
 
-    // MARK: - Helpers
-
-    private func runGit(_ args: [String], in directory: String) -> String? {
+    private nonisolated func runGit(_ args: [String], in directory: String) -> String? {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         process.arguments = args
@@ -134,7 +144,7 @@ final class GitMonitor: ObservableObject {
     }
 
     /// Parse `git diff --shortstat` output like "3 files changed, 42 insertions(+), 8 deletions(-)"
-    private func parseShortStat(_ stat: String) -> (files: Int, added: Int, removed: Int) {
+    private nonisolated func parseShortStat(_ stat: String) -> (files: Int, added: Int, removed: Int) {
         var files = 0, added = 0, removed = 0
 
         if let match = stat.range(of: #"(\d+) file"#, options: .regularExpression) {
@@ -166,4 +176,10 @@ final class GitMonitor: ObservableObject {
             }
         }
     }
+}
+
+/// Result of a background git poll.
+private struct PollResult {
+    let state: GitState
+    let commit: GitCommitInfo?
 }
