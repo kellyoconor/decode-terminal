@@ -5,10 +5,16 @@ struct OnboardingView: View {
     @Environment(\.colorScheme) private var colorScheme
     private var theme: Theme { Theme(colorScheme: colorScheme) }
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @State private var apiKeyInput = ""
     @State private var currentStep = 0
     @State private var isValidating = false
     @State private var validationError: String? = nil
+
+    private var stepTransition: Animation? {
+        reduceMotion ? nil : .easeOut(duration: 0.25)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -52,12 +58,12 @@ struct OnboardingView: View {
                     .font(.system(size: Theme.fontBody))
                     .foregroundColor(theme.mutedText)
                     .multilineTextAlignment(.center)
-                    .lineSpacing(4)
+                    .lineSpacing(Theme.lineSpaceBody)
                     .frame(maxWidth: 360)
             }
 
             Button("Get started") {
-                withAnimation(.easeOut(duration: 0.25)) { currentStep = 1 }
+                withAnimation(stepTransition) { currentStep = 1 }
             }
             .buttonStyle(.borderedProminent)
             .tint(theme.actionColor)
@@ -74,7 +80,7 @@ struct OnboardingView: View {
             .frame(maxWidth: 340)
 
             Button("Next") {
-                withAnimation(.easeOut(duration: 0.25)) { currentStep = 2 }
+                withAnimation(stepTransition) { currentStep = 2 }
             }
             .buttonStyle(.borderedProminent)
             .tint(theme.actionColor)
@@ -94,7 +100,7 @@ struct OnboardingView: View {
                 Text(desc)
                     .font(.system(size: Theme.fontSubhead))
                     .foregroundColor(theme.mutedText)
-                    .lineSpacing(2)
+                    .lineSpacing(Theme.lineSpaceCompact)
             }
         }
     }
@@ -108,7 +114,7 @@ struct OnboardingView: View {
                     .font(.system(size: Theme.fontSubhead))
                     .foregroundColor(theme.mutedText)
                     .multilineTextAlignment(.center)
-                    .lineSpacing(2)
+                    .lineSpacing(Theme.lineSpaceCompact)
             }
 
             VStack(alignment: .leading, spacing: Theme.spaceMD) {

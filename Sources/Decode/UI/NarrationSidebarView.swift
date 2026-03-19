@@ -20,7 +20,7 @@ struct NarrationSidebarView: View {
                     HStack(spacing: Theme.spaceSM) {
                         Circle()
                             .fill(theme.watchingGreen)
-                            .frame(width: Theme.spaceSM, height: Theme.spaceSM)
+                            .frame(width: Theme.indicatorDot, height: Theme.indicatorDot)
                         Text("Watching")
                             .font(.system(size: Theme.fontFootnote, weight: .medium))
                             .foregroundColor(theme.watchingGreen)
@@ -30,7 +30,7 @@ struct NarrationSidebarView: View {
                     HStack(spacing: Theme.spaceSM) {
                         Circle()
                             .fill(theme.watchingGreen)
-                            .frame(width: Theme.spaceSM, height: Theme.spaceSM)
+                            .frame(width: Theme.indicatorDot, height: Theme.indicatorDot)
                         Text("Connected")
                             .font(.system(size: Theme.fontFootnote, weight: .medium))
                             .foregroundColor(theme.watchingGreen)
@@ -68,10 +68,10 @@ struct NarrationSidebarView: View {
                 .padding(.horizontal, Theme.spaceXL)
                 .padding(.vertical, Theme.spaceLG)
                 .background(theme.cardBg)
-                .cornerRadius(Theme.spaceMD)
+                .cornerRadius(Theme.radiusLG)
                 .overlay(
-                    RoundedRectangle(cornerRadius: Theme.spaceMD)
-                        .stroke(theme.borderColor, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: Theme.radiusLG)
+                        .stroke(theme.borderColor, lineWidth: Theme.borderWidth)
                 )
                 .padding(.horizontal, Theme.spaceXXL)
                 .padding(.top, Theme.spaceXL)
@@ -105,7 +105,7 @@ struct NarrationSidebarView: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: Theme.spaceLG) {
             Image(systemName: "terminal.fill")
-                .font(.system(size: 28))
+                .font(.system(size: Theme.iconEmptyState))
                 .foregroundColor(theme.borderColor)
             Text("Waiting for an agent session...")
                 .font(.system(size: Theme.fontBody, weight: .medium))
@@ -113,7 +113,7 @@ struct NarrationSidebarView: View {
             Text("Launch Claude Code, Codex, or another AI agent in the terminal. Decode will start narrating automatically.")
                 .font(.system(size: Theme.fontSubhead))
                 .foregroundColor(theme.subtleText)
-                .lineSpacing(4)
+                .lineSpacing(Theme.lineSpaceBody)
         }
         .padding(.top, Theme.spaceXXL)
     }

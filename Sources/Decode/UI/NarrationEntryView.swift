@@ -26,7 +26,7 @@ struct NarrationEntryView: View {
             Text(entry.text)
                 .font(.system(size: Theme.fontBody, weight: .regular, design: .default))
                 .foregroundColor(isRecent ? theme.primaryText : theme.mutedText)
-                .lineSpacing(4)
+                .lineSpacing(Theme.lineSpaceBody)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.vertical, Theme.spaceXS)
@@ -50,15 +50,15 @@ struct NarrationEntryView: View {
             Text(entry.text)
                 .font(.system(size: Theme.fontBody, weight: .regular, design: .default))
                 .foregroundColor(theme.primaryText)
-                .lineSpacing(4)
+                .lineSpacing(Theme.lineSpaceBody)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(14)
-        .background(theme.waitingBlue.opacity(0.06))
-        .cornerRadius(Theme.spaceMD)
+        .padding(Theme.cardPadding)
+        .background(theme.waitingBlue.opacity(Theme.opacityCardTint))
+        .cornerRadius(Theme.radiusLG)
         .overlay(
-            RoundedRectangle(cornerRadius: Theme.spaceMD)
-                .stroke(theme.waitingBlue.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: Theme.radiusLG)
+                .stroke(theme.waitingBlue.opacity(Theme.opacityCardStroke), lineWidth: Theme.borderWidth)
         )
         .accessibilityLabel("Agent needs input: \(entry.text)")
     }

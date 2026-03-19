@@ -26,6 +26,33 @@ struct Theme {
     static let fontTitle1: CGFloat = 24
     static let fontLargeTitle: CGFloat = 32
 
+    // MARK: - Border radius scale
+
+    static let radiusSM: CGFloat = 3      // shortcut badges
+    static let radiusMD: CGFloat = 6      // buttons
+    static let radiusLG: CGFloat = 8      // cards
+
+    // MARK: - Card & surface tokens
+
+    static let cardPadding: CGFloat = 14
+    static let borderWidth: CGFloat = 1
+
+    // MARK: - Opacity scale
+
+    static let opacityCardTint: Double = 0.06
+    static let opacityPillBg: Double = 0.1
+    static let opacityCardStroke: Double = 0.2
+
+    // MARK: - Line spacing
+
+    static let lineSpaceBody: CGFloat = 4
+    static let lineSpaceCompact: CGFloat = 2
+
+    // MARK: - Icon sizes
+
+    static let iconEmptyState: CGFloat = 28
+    static let indicatorDot: CGFloat = 6
+
     // MARK: - Sidebar backgrounds
 
     var sidebarBg: Color {

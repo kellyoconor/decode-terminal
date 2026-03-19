@@ -10,14 +10,14 @@ struct StatusPillView: View {
         HStack(spacing: Theme.spaceSM) {
             Circle()
                 .fill(statusColor)
-                .frame(width: Theme.spaceSM, height: Theme.spaceSM)
+                .frame(width: Theme.indicatorDot, height: Theme.indicatorDot)
             Text(status.displayLabel)
                 .font(.system(size: Theme.fontFootnote, weight: .semibold, design: .default))
                 .foregroundColor(statusColor)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(statusColor.opacity(0.1))
+        .background(statusColor.opacity(Theme.opacityPillBg))
         .clipShape(Capsule())
         .accessibilityLabel("Status: \(status.displayLabel)")
     }

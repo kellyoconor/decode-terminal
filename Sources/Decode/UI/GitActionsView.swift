@@ -68,17 +68,17 @@ struct GitActionsView: View {
                         .padding(.horizontal, Theme.spaceXS)
                         .padding(.vertical, 1)
                         .background(theme.shortcutBg)
-                        .cornerRadius(3)
+                        .cornerRadius(Theme.radiusSM)
                 }
             }
             .foregroundColor(theme.actionColor)
             .padding(.horizontal, 10)
             .padding(.vertical, Theme.spaceSM)
             .background(theme.buttonBg)
-            .cornerRadius(Theme.spaceSM)
+            .cornerRadius(Theme.radiusMD)
             .overlay(
-                RoundedRectangle(cornerRadius: Theme.spaceSM)
-                    .stroke(theme.borderColor, lineWidth: 1)
+                RoundedRectangle(cornerRadius: Theme.radiusMD)
+                    .stroke(theme.borderColor, lineWidth: Theme.borderWidth)
             )
         }
         .buttonStyle(.plain)

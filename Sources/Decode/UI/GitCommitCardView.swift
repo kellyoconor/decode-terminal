@@ -25,7 +25,7 @@ struct GitCommitCardView: View {
             Text(commit.message)
                 .font(.system(size: Theme.fontBody, weight: .regular, design: .default))
                 .foregroundColor(theme.primaryText)
-                .lineSpacing(4)
+                .lineSpacing(Theme.lineSpaceBody)
                 .lineLimit(2)
 
             HStack(spacing: 10) {
@@ -55,12 +55,12 @@ struct GitCommitCardView: View {
                     .foregroundColor(theme.subtleText)
             }
         }
-        .padding(14)
-        .background(theme.commitColor.opacity(0.06))
-        .cornerRadius(Theme.spaceMD)
+        .padding(Theme.cardPadding)
+        .background(theme.commitColor.opacity(Theme.opacityCardTint))
+        .cornerRadius(Theme.radiusLG)
         .overlay(
-            RoundedRectangle(cornerRadius: Theme.spaceMD)
-                .stroke(theme.commitColor.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: Theme.radiusLG)
+                .stroke(theme.commitColor.opacity(Theme.opacityCardStroke), lineWidth: Theme.borderWidth)
         )
         .accessibilityLabel("Committed: \(commit.message), \(commit.filesChanged) files changed")
     }
