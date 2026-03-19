@@ -14,16 +14,16 @@ struct SettingsView: View {
             VStack(spacing: 8) {
                 Text("~ decode")
                     .font(.system(size: 24, weight: .bold, design: .monospaced))
-                    .foregroundColor(.primary)
+                    .foregroundColor(theme.primaryText)
                 Text("Enter your Anthropic API key to enable narration.")
                     .font(.system(size: 13))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(theme.mutedText)
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("API Key")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(theme.mutedText)
                 SecureField("sk-ant-...", text: $apiKeyInput)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 13, design: .monospaced))
@@ -53,7 +53,7 @@ struct SettingsView: View {
 
             Text("Your key is stored in macOS Keychain.")
                 .font(.system(size: 11))
-                .foregroundColor(Color.secondary.opacity(0.6))
+                .foregroundColor(theme.subtleText)
         }
         .padding(40)
         .frame(width: 400)
